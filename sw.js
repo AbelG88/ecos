@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ecos-v1';
+const CACHE_NAME = 'ecos-v2';
 const ASSETS = ['./index.html', './cards.js', './app.js', './manifest.json', './icons/icon-192.png', './icons/icon-512.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(ASSETS))); self.skipWaiting(); });
 self.addEventListener('activate', e => {
