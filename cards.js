@@ -1,0 +1,45 @@
+/* Tarjetas incluidas. Son emojis del sistema (sin imágenes de terceros ni licencias).
+   Formato: [id, emoji, etiqueta, categoría]  — la etiqueta es lo que se dice en voz alta. */
+const CATEGORIAS = {
+  personas: {n:'Personas', e:'👪', c:'#fef3c7'},
+  acciones: {n:'Acciones', e:'🏃', c:'#d1fae5'},
+  necesidades: {n:'Necesidades', e:'🙋', c:'#fee2e2'},
+  emociones: {n:'Emociones', e:'😊', c:'#fce7f3'},
+  comida: {n:'Comida y bebida', e:'🍎', c:'#ffedd5'},
+  lugares: {n:'Lugares', e:'🏠', c:'#dbeafe'},
+  objetos: {n:'Objetos', e:'🧸', c:'#e0e7ff'},
+  tiempo: {n:'Tiempo y otros', e:'⏰', c:'#e2e8f0'},
+  propias: {n:'Mis tarjetas', e:'⭐', c:'#ede9fe'}
+};
+const TARJETAS_BASE = [
+ ['yo','🙋','yo','personas'],['vos','👉','vos','personas'],['mamá','👩','mamá','personas'],['papá','👨','papá','personas'],
+ ['abuela','👵','abuela','personas'],['abuelo','👴','abuelo','personas'],['hermano','🧒','hermano','personas'],['maestra','👩‍🏫','seño','personas'],
+ ['amigo','🧑‍🤝‍🧑','amigo','personas'],['doctor','🧑‍⚕️','doctor','personas'],
+ ['quiero','🤲','quiero','acciones'],['no-quiero','🙅','no quiero','acciones'],['ir','🚶','ir','acciones'],['comer','🍽️','comer','acciones'],
+ ['beber','🥤','tomar','acciones'],['jugar','🎮','jugar','acciones'],['dormir','😴','dormir','acciones'],['mirar','👀','mirar','acciones'],
+ ['escuchar','👂','escuchar','acciones'],['abrir','📂','abrir','acciones'],['ayudar','🤝','ayudar','acciones'],['abrazar','🤗','abrazo','acciones'],
+ ['lavar','🧼','lavar','acciones'],['vestir','👕','vestirme','acciones'],['salir','🚪','salir','acciones'],['esperar','✋','esperar','acciones'],
+ ['terminar','🏁','terminé','acciones'],['mas','➕','más','acciones'],['parar','🛑','basta','acciones'],['leer','📖','leer','acciones'],
+ ['dibujar','🖍️','dibujar','acciones'],['cantar','🎵','cantar','acciones'],['bañarse','🛁','bañarme','acciones'],['cepillar','🪥','cepillarme los dientes','acciones'],
+ ['agua','💧','agua','necesidades'],['baño','🚽','baño','necesidades'],['ayuda','🆘','ayuda','necesidades'],['hambre','🍴','tengo hambre','necesidades'],
+ ['sed','🥛','tengo sed','necesidades'],['sueño','🛌','tengo sueño','necesidades'],['dolor','🤕','me duele','necesidades'],['frio','🥶','tengo frío','necesidades'],
+ ['calor','🥵','tengo calor','necesidades'],['pañal','🧷','cambiame el pañal','necesidades'],['descanso','🧘','necesito un descanso','necesidades'],['silencio','🤫','silencio, por favor','necesidades'],
+ ['feliz','😀','feliz','emociones'],['triste','😢','triste','emociones'],['enojado','😠','enojado','emociones'],['miedo','😨','miedo','emociones'],
+ ['cansado','🥱','cansado','emociones'],['nervioso','😬','nervioso','emociones'],['tranquilo','😌','tranquilo','emociones'],['sorpresa','😲','sorprendido','emociones'],
+ ['aburrido','😑','aburrido','emociones'],['te-quiero','❤️','te quiero','emociones'],['si','👍','sí','emociones'],['no','👎','no','emociones'],
+ ['manzana','🍎','manzana','comida'],['banana','🍌','banana','comida'],['pan','🍞','pan','comida'],['leche','🥛','leche','comida'],
+ ['agua-beb','💧','agua','comida'],['jugo','🧃','jugo','comida'],['galletitas','🍪','galletitas','comida'],['fideos','🍝','fideos','comida'],
+ ['arroz','🍚','arroz','comida'],['pollo','🍗','pollo','comida'],['huevo','🥚','huevo','comida'],['queso','🧀','queso','comida'],
+ ['yogur','🍦','yogur','comida'],['fruta','🍇','fruta','comida'],['verdura','🥦','verdura','comida'],['sopa','🍲','sopa','comida'],
+ ['pizza','🍕','pizza','comida'],['helado','🍨','helado','comida'],['sandwich','🥪','sándwich','comida'],['papas','🍟','papas fritas','comida'],
+ ['casa','🏠','casa','lugares'],['escuela','🏫','escuela','lugares'],['plaza','🛝','plaza','lugares'],['baño-lugar','🚻','baño','lugares'],
+ ['cocina','🍳','cocina','lugares'],['cuarto','🛏️','mi cuarto','lugares'],['auto','🚗','auto','lugares'],['hospital','🏥','médico','lugares'],
+ ['super','🛒','supermercado','lugares'],['parque','🌳','parque','lugares'],['pileta','🏊','pileta','lugares'],['afuera','🌤️','afuera','lugares'],
+ ['pelota','⚽','pelota','objetos'],['juguete','🧸','juguete','objetos'],['tablet','📱','tablet','objetos'],['tele','📺','tele','objetos'],
+ ['libro','📚','libro','objetos'],['musica','🎧','música','objetos'],['mochila','🎒','mochila','objetos'],['zapatillas','👟','zapatillas','objetos'],
+ ['campera','🧥','campera','objetos'],['remera','👕','remera','objetos'],['cuchara','🥄','cuchara','objetos'],['vaso','🥤','vaso','objetos'],
+ ['cepillo','🪥','cepillo de dientes','objetos'],['lápiz','✏️','lápiz','objetos'],['bici','🚲','bicicleta','objetos'],['auriculares','🎧','auriculares','objetos'],
+ ['ahora','⏱️','ahora','tiempo'],['despues','⏭️','después','tiempo'],['hoy','📅','hoy','tiempo'],['mañana','🌅','mañana','tiempo'],
+ ['noche','🌙','noche','tiempo'],['dia','☀️','día','tiempo'],['gracias','🙏','gracias','tiempo'],['hola','👋','hola','tiempo'],
+ ['chau','👋','chau','tiempo'],['por-favor','🥺','por favor','tiempo'],['otra-vez','🔁','otra vez','tiempo'],['mucho','🔝','mucho','tiempo'],['poco','🤏','poco','tiempo']
+];
