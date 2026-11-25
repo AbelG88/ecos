@@ -9,6 +9,10 @@ const CATEGORIAS = {
   lugares: {n:'Lugares', e:'🏠', c:'#dbeafe'},
   objetos: {n:'Objetos', e:'🧸', c:'#e0e7ff'},
   tiempo: {n:'Tiempo y otros', e:'⏰', c:'#e2e8f0'},
+  verbos: {n:'Empezar frases', e:'🗣️', c:'#bbf7d0'},
+  conectores: {n:'Conectores', e:'🔗', c:'#e9d5ff'},
+  preguntas: {n:'Preguntas', e:'❓', c:'#fef08a'},
+  social: {n:'Saludos y cortesía', e:'🙏', c:'#fbcfe8'},
   propias: {n:'Mis tarjetas', e:'⭐', c:'#ede9fe'}
 };
 const TARJETAS_BASE = [
@@ -41,5 +45,21 @@ const TARJETAS_BASE = [
  ['cepillo','🪥','cepillo de dientes','objetos'],['lápiz','✏️','lápiz','objetos'],['bici','🚲','bicicleta','objetos'],['auriculares','🎧','auriculares','objetos'],
  ['ahora','⏱️','ahora','tiempo'],['despues','⏭️','después','tiempo'],['hoy','📅','hoy','tiempo'],['mañana','🌅','mañana','tiempo'],
  ['noche','🌙','noche','tiempo'],['dia','☀️','día','tiempo'],['gracias','🙏','gracias','tiempo'],['hola','👋','hola','tiempo'],
- ['chau','👋','chau','tiempo'],['por-favor','🥺','por favor','tiempo'],['otra-vez','🔁','otra vez','tiempo'],['mucho','🔝','mucho','tiempo'],['poco','🤏','poco','tiempo']
+ ['chau','👋','chau','tiempo'],['por-favor','🥺','por favor','tiempo'],['otra-vez','🔁','otra vez','tiempo'],['mucho','🔝','mucho','tiempo'],['poco','🤏','poco','tiempo'],
+ ['necesito','☝️','necesito','verbos'],['siento','💭','siento','verbos'],['dame','📥','dame','verbos'],['tengo','🙌','tengo','verbos'],
+ ['puedo','💪','puedo','verbos'],['vamos','👣','vamos a','verbos'],['me-gusta','😍','me gusta','verbos'],['no-me-gusta','🤢','no me gusta','verbos'],
+ ['hacer','🛠️','hacer','verbos'],['ver','👁️','ver','verbos'],['pedir','🗣️','pedir','verbos'],['poner','⬇️','poner','verbos'],
+ ['sacar','⬆️','sacar','verbos'],['cerrar','🔒','cerrar','verbos'],['tocar','👆','tocar','verbos'],['venir','👈','venir','verbos'],
+ ['sentarme','🪑','sentarme','verbos'],['levantarme','🧍','levantarme','verbos'],['prestame','🔄','prestame','verbos'],['mostrame','🖼️','mostrame','verbos'],['llevame','🧳','llevame','verbos'],
+ ['el','🔹','el','conectores'],['la','🔸','la','conectores'],['los','🔷','los','conectores'],['las','🔶','las','conectores'],
+ ['un','1️⃣','un','conectores'],['una','☝️','una','conectores'],['mi','👤','mi','conectores'],['tu','👉','tu','conectores'],
+ ['y','➕','y','conectores'],['o','↔️','o','conectores'],['con','🤝','con','conectores'],['sin','🚫','sin','conectores'],
+ ['para','🎯','para','conectores'],['en','📍','en','conectores'],['de','📦','de','conectores'],['a','➡️','a','conectores'],
+ ['que','💬','que','conectores'],['porque','💡','porque','conectores'],['pero','⚠️','pero','conectores'],['tambien','🙂','también','conectores'],
+ ['muy','⬆️','muy','conectores'],['menos','➖','menos','conectores'],['aca','📌','acá','conectores'],['ahi','👇','ahí','conectores'],
+ ['q-que','❓','¿qué?','preguntas'],['q-quien','🧑','¿quién?','preguntas'],['q-donde','🗺️','¿dónde?','preguntas'],['q-cuando','🗓️','¿cuándo?','preguntas'],
+ ['q-porque','🤔','¿por qué?','preguntas'],['q-como','🛠️','¿cómo?','preguntas'],['q-cuanto','🔢','¿cuánto?','preguntas'],['q-cual','👆','¿cuál?','preguntas'],
+ ['buen-dia','🌞','buen día','social'],['buenas-noches','🌛','buenas noches','social'],['de-nada','😊','de nada','social'],['perdon','🙇','perdón','social'],
+ ['permiso','🚶','permiso','social'],['como-estas','🗨️','¿cómo estás?','social'],['bien','👌','bien','social'],['mal','😕','mal','social'],
+ ['me-llamo','🏷️','me llamo','social'],['listo','✅','listo','social']
 ];

@@ -7,16 +7,33 @@ const EMOJIS_MOD = ['⭐','🏠','🍽️','😊','🎮','🚌','🏫','🛁','�
 function uid(p){ return (p||'c_') + Math.random().toString(36).slice(2,9) + Date.now().toString(36).slice(-3); }
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
+function modsNuevos(){
+  const m=(id,nombre,emoji,items)=>({id,nombre,emoji,items});
+  const cat=k=>TARJETAS_BASE.filter(t=>t[3]===k).map(t=>t[0]);
+  return {
+    ini:[
+      m('m_verbos','Verbos','🗣️',['quiero','no-quiero','necesito','siento','dame','tengo','puedo','vamos','me-gusta','no-me-gusta','hacer','ver','pedir','poner','sacar','abrir','cerrar','tocar','venir','sentarme','levantarme','prestame','mostrame','llevame','ir','comer','beber','jugar','dormir','mirar','escuchar','ayudar']),
+      m('m_conectores','Conectores','🔗',['el','la','los','las','un','una','mi','tu','y','o','con','sin','para','en','de','a','que','porque','pero','tambien','muy','mas','menos','poco','mucho','aca','ahi','si','no']),
+      m('m_preguntas','Preguntas','❓',cat('preguntas'))
+    ],
+    fin:[
+      m('m_personas','Personas','👪',cat('personas')), m('m_lugares','Lugares','🏠',cat('lugares')),
+      m('m_objetos','Objetos','🧸',cat('objetos')), m('m_tiempo','Tiempo','⏰',cat('tiempo')),
+      m('m_social','Saludos','🙏',cat('social'))
+    ]
+  };
+}
 function fichaEj(){ return {id:'f_'+Math.random().toString(36).slice(2,7),nombre:'Mis estrellas',ficha:'⭐',meta:5,premio:'Mi premio',premioEmoji:'🎁',ganadas:0,premios:0}; }
 function defaults(){
   const m = (id,nombre,emoji,items)=>({id,nombre,emoji,items});
   return {
-    v:1, activo:'m_necesito',
-    modulos:[
+    v:1, activo:'m_verbos', mods3:true,
+    modulos:[...modsNuevos().ini,
       m('m_necesito','Necesito','🙋',['agua','baño','ayuda','hambre','sed','sueño','dolor','frio','calor','descanso','silencio']),
       m('m_emociones','Cómo estoy','😊',['feliz','triste','enojado','miedo','cansado','nervioso','tranquilo','aburrido','te-quiero']),
       m('m_comida','Quiero comer','🍎',['manzana','banana','pan','leche','jugo','galletitas','fideos','arroz','pollo','huevo','queso','fruta']),
-      m('m_acciones','Quiero hacer','🎮',['jugar','mirar','escuchar','leer','dibujar','cantar','salir','abrazar'])
+      m('m_acciones','Quiero hacer','🎮',['jugar','mirar','escuchar','leer','dibujar','cantar','salir','abrazar']),
+      ...modsNuevos().fin
     ],
     rutinas:[
       {id:'r_manana',nombre:'Mañana',emoji:'🌅',pasos:['dormir','baño','lavar','vestir','comer','cepillar','mochila']},
@@ -34,6 +51,11 @@ function migrar(s){
   if(!s.hechos || typeof s.hechos!=='object') s.hechos = {};
   if(!s.rutinas) s.rutinas = [];
   if(!s.tarjetas) s.tarjetas = [];
+  if(!s.mods3){ // pestañas nuevas para quienes ya tenían datos: se suman sin tocar las propias
+    const n = modsNuevos(), ya = id=>s.modulos.some(m=>m.id===id);
+    s.modulos = n.ini.filter(m=>!ya(m.id)).concat(s.modulos, n.fin.filter(m=>!ya(m.id)));
+    s.mods3 = true;
+  }
   if(!s.modulos.some(m=>m.id===s.activo)) s.activo = (s.modulos[0]||{}).id || '';
   return s;
 }
@@ -153,6 +175,7 @@ function vRutLista(){
     ${edit?`<button class="btn" data-act="newrut">➕ Nueva rutina</button>`:''}
     ${!S.rutinas.length?'<div class="vacio">Todavía no hay rutinas. Activá ✏️ para crear una.</div>':''}</div>`;
 }
+function itf(it){ return it.tablero ? porId(S.fichas,it.tablero) : null; }
 function vSemana(){
   const hoy = hoyIdx(), di = V.dia==null ? hoy : V.dia, esHoy = di===hoy;
   const items = S.semana[di], hechos = hechosHoy();
@@ -165,8 +188,9 @@ function vSemana(){
     const done = esHoy && hechos.includes(it.id);
     return `<div class="wi ${done?'done':''}">
       ${edit?`<input type="time" class="hora" value="${esc(it.hora||'')}" data-in="whora" data-id="${it.id}" data-d="${di}">`:`<div class="hora">${esc(it.hora||'')}</div>`}
-      <button class="wmain" data-act="wopen" data-id="${it.id}" data-d="${di}"><span class="e">${inf.e}</span><span class="t">${esc(inf.t)}${inf.sub?`<small>${inf.sub}${it.tipo==='r'?' · tocá para empezar':''}</small>`:''}</span></button>
+      <button class="wmain" data-act="wopen" data-id="${it.id}" data-d="${di}"><span class="e">${inf.e}</span><span class="t">${esc(inf.t)}${inf.sub?`<small>${inf.sub}${it.tipo==='r'?' · tocá para empezar':''}${itf(it)?' · da '+esc(itf(it).ficha):''}</small>`:(itf(it)?`<small>da ${esc(itf(it).ficha)}</small>`:'')}</span></button>
       ${esHoy&&!edit?`<button class="wchk ${done?'on':''}" data-act="wchk" data-id="${it.id}" aria-label="Hecho">${done?'✓':''}</button>`:''}
+      ${edit&&S.fichas.length?`<select class="wfic" data-in="wfic" data-id="${it.id}" data-d="${di}"><option value="">Sin ficha</option>${S.fichas.map(f=>`<option value="${f.id}" ${it.tablero===f.id?'selected':''}>Da una ficha: ${esc(f.ficha)} ${esc(f.nombre)}</option>`).join('')}</select>`:''}
       ${edit?`<button class="mv" data-act="wup" data-d="${di}" data-j="${ix}" ${ix===0?'disabled':''}>▲</button><button class="mv" data-act="wdown" data-d="${di}" data-j="${ix}" ${ix===items.length-1?'disabled':''}>▼</button><button class="mv" data-act="wrm" data-d="${di}" data-j="${ix}">✕</button>`:''}
     </div>`;
   }).join('');
@@ -394,7 +418,7 @@ const ACC = {
   play(d){ playing={id:d.id,i:0,w:d.w||null}; render(); const r=porId(S.rutinas,d.id); const t=tarjeta(r.pasos[0]); hablar(t&&t.etiqueta); },
   stopPlay(){ playing=null; render(); },
   pprev(){ if(playing.i>0){ playing.i--; render(); ACC.pspeak(); } },
-  pnext(){ const r=porId(S.rutinas,playing.id); if(playing.i>=r.pasos.length-1){ const w=playing.w; playing=null; if(w) marcar(w,true); const f=r.tablero&&porId(S.fichas,r.tablero); if(f) darFicha(f,'Terminó: '+r.nombre); else celebrar('ok','¡Muy bien!','Terminamos: '+r.nombre,'🎉','¡Muy bien! Terminamos'); } else { playing.i++; render(); ACC.pspeak(); } },
+  pnext(){ const r=porId(S.rutinas,playing.id); if(playing.i>=r.pasos.length-1){ const w=playing.w; playing=null; if(w) marcar(w,true); const itw=w&&S.semana[hoyIdx()].find(x=>x.id===w); const f=(itw&&itf(itw))||(r.tablero&&porId(S.fichas,r.tablero)); if(f) darFicha(f,'Terminó: '+r.nombre); else celebrar('ok','¡Muy bien!','Terminamos: '+r.nombre,'🎉','¡Muy bien! Terminamos'); } else { playing.i++; render(); ACC.pspeak(); } },
   pspeak(){ const r=porId(S.rutinas,playing.id); const t=tarjeta(r.pasos[playing.i]); hablar(t&&t.etiqueta); },
   expmod(d){ const m=porId(S.modulos,d.id); descargar({tipo:'ecos_modulo_v1',modulo:{nombre:m.nombre,emoji:m.emoji,items:m.items},tarjetas:usadas(m.items)},`ecos-modulo-${slug(m.nombre)}.json`); },
   exprut(d){ const r=porId(S.rutinas,d.id); descargar({tipo:'ecos_rutina_v1',rutina:{nombre:r.nombre,emoji:r.emoji,pasos:r.pasos},tarjetas:usadas(r.pasos)},`ecos-rutina-${slug(r.nombre)}.json`); },
@@ -408,7 +432,7 @@ const ACC = {
     if(it.tipo==='r'){ const r=porId(S.rutinas,it.ref); if(!r||!r.pasos.length){ toast('Esa rutina no tiene pasos'); return; } ACC.play({id:r.id, w:(+d.d===hoyIdx()?it.id:null)}); }
     else { const t=tarjeta(it.ref); hablar(t&&t.etiqueta); }
   },
-  wchk(d){ const on=!hechosHoy().includes(d.id); marcar(d.id,on); const todos=S.semana[hoyIdx()].filter(it=>itemInfo(it)); if(on && todos.length && todos.every(it=>hechosHoy().includes(it.id))) celebrar('ok','¡Día completo!','Hizo todo lo de hoy','🌟','¡Día completo! Muy bien'); else { if(on) tono('ok'); render(); } },
+  wchk(d){ const on=!hechosHoy().includes(d.id); marcar(d.id,on); const it0=S.semana[hoyIdx()].find(x=>x.id===d.id), f0=on&&it0&&itf(it0); if(f0){ const i0=itemInfo(it0); darFicha(f0,'Hizo: '+(i0?i0.t:'')); return; } const todos=S.semana[hoyIdx()].filter(it=>itemInfo(it)); if(on && todos.length && todos.every(it=>hechosHoy().includes(it.id))) celebrar('ok','¡Día completo!','Hizo todo lo de hoy','🌟','¡Día completo! Muy bien'); else { if(on) tono('ok'); render(); } },
   wup(d){ mover(S.semana[+d.d],+d.j,-1); guardar(); render(); },
   wdown(d){ mover(S.semana[+d.d],+d.j,1); guardar(); render(); },
   wrm(d){ S.semana[+d.d].splice(+d.j,1); guardar(); render(); },
@@ -428,7 +452,7 @@ const ACC = {
   premoji(d){ porId(S.fichas,d.id).premioEmoji=d.e; guardar(); render(); },
   metadec(d){ const f=porId(S.fichas,d.id); if(f.meta>2){ f.meta--; f.ganadas=Math.min(f.ganadas,f.meta); guardar(); render(); } },
   metainc(d){ const f=porId(S.fichas,d.id); if(f.meta<12){ f.meta++; guardar(); render(); } },
-  delfic(d){ if(!confirm('¿Eliminar este tablero?')) return; S.fichas=S.fichas.filter(f=>f.id!==d.id); S.rutinas.forEach(r=>{ if(r.tablero===d.id) delete r.tablero; }); guardar(); ir('fic'); }
+  delfic(d){ if(!confirm('¿Eliminar este tablero?')) return; S.fichas=S.fichas.filter(f=>f.id!==d.id); S.rutinas.forEach(r=>{ if(r.tablero===d.id) delete r.tablero; }); S.semana.forEach(dia=>dia.forEach(it=>{ if(it.tablero===d.id) delete it.tablero; })); guardar(); ir('fic'); }
 };
 function acc(a, d){
   if(a.startsWith('emod:')) return ir('emod',{id:a.slice(5)});
@@ -449,6 +473,7 @@ document.getElementById('app').addEventListener('input', e=>{
   else if(k==='rtab'){ const r=porId(S.rutinas,e.target.dataset.id); if(v) r.tablero=v; else delete r.tablero; guardar(); }
   else if(k==='fname'){ porId(S.fichas,e.target.dataset.id).nombre=v; guardar(); }
   else if(k==='fprem'){ porId(S.fichas,e.target.dataset.id).premio=v; guardar(); }
+  else if(k==='wfic'){ const it=S.semana[+e.target.dataset.d].find(x=>x.id===e.target.dataset.id); if(it){ if(v) it.tablero=v; else delete it.tablero; guardar(); } }
   else if(k==='whora'){ const it=S.semana[+e.target.dataset.d].find(x=>x.id===e.target.dataset.id); if(it){ it.hora=v; guardar(); } }
   else if(k==='wq'){ V.q=v; const pos=e.target.selectionStart; render(); const i=document.querySelector('[data-in=wq]'); if(i){ i.focus(); i.setSelectionRange(pos,pos); } }
   else if(k==='q'){ V.q=v; const pos=e.target.selectionStart; render(); const i=document.querySelector('[data-in=q]'); if(i){ i.focus(); i.setSelectionRange(pos,pos); } }

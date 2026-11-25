@@ -29,3 +29,5 @@ MIT
 - **Rutinas** ahora tiene su propia pestaña inferior, con **Mi semana** (armá cada día de lunes a domingo, con horarios, rutinas y actividades; tildá lo hecho; copiá un día a otros) y **Mis rutinas**.
 - **Fichas** (economía de fichas): tableros con meta y premio; cada ficha ganada suena y celebra, y al completar el tablero aparece el premio. Una rutina puede vincularse a un tablero para dar una ficha al terminar.
 - Los sonidos se generan en el dispositivo (sin archivos) y se pueden silenciar en Ajustes.
+- **Pestañas nuevas** para armar frases coherentes: Verbos (quiero, necesito, siento, dame…), Conectores (el, la, con, sin, y, pero…), Preguntas, Personas, Lugares, Objetos, Tiempo y Saludos. Se pueden editar, ordenar y crear más.
+- Cada ítem de la semana puede dar una ficha al tildarlo.
