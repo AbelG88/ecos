@@ -33,3 +33,5 @@ MIT
 - Cada ítem de la semana puede dar una ficha al tildarlo.
 - **Mi día** (Rutinas) rediseñado para ser lo más simple posible: abre siempre en el día de hoy, se tilda tocando la actividad, y para agregar se elige en 3 pasos (qué, a qué hora, qué días) usando las mismas pestañas de tarjetas, sin escribir ni buscar.
 - Más pestañas: Rutina diaria, Colores, Ropa, Animales, Cuerpo, Escuela y Juegos.
+- **Rutinas paso a paso** con tantos pasos como haga falta (ej.: lavarse los dientes en 15 pasos): vienen 5 rutinas listas para usar (dientes, manos, baño, vestirse, bañarse) y se pueden armar propias con las pestañas de tarjetas, reordenar y crear tarjetas propias con foto.
+- **Fichas acumulables**: cada rutina o actividad suma las fichas que el adulto defina; se juntan en una billetera y se **canjean por los premios que cargue el adulto** (chocolate, helado, tele por X minutos…), cada uno con su costo.

@@ -15,7 +15,8 @@ function modsNuevos(){
       m('m_verbos','Verbos','🗣️',['quiero','no-quiero','necesito','siento','dame','tengo','puedo','vamos','me-gusta','no-me-gusta','hacer','ver','pedir','poner','sacar','abrir','cerrar','tocar','venir','sentarme','levantarme','prestame','mostrame','llevame','ir','comer','beber','jugar','dormir','mirar','escuchar','ayudar','esperar','terminar','parar']),
       m('m_conectores','Conectores','🔗',['el','la','los','las','un','una','mi','tu','y','o','con','sin','para','en','de','a','que','porque','pero','tambien','muy','mas','menos','poco','mucho','aca','ahi','si','no']),
       m('m_preguntas','Preguntas','❓',cat('preguntas')),
-      m('m_diario','Rutina diaria','🕗',['despertarme','baño','lavar','vestir','desayunar','cepillar','mochila','ir-escuela','escuela','tarea','almorzar','merendar','jugar','bañarse','ducha','cenar','pijama','dormir','siesta','terapia','pastillas','paseo','pantalla','ordenar','visita','volver-casa','comer','beber','salir'])
+      m('m_diario','Rutina diaria','🕗',['despertarme','baño','lavar','vestir','desayunar','cepillar','mochila','ir-escuela','escuela','tarea','almorzar','merendar','jugar','bañarse','ducha','cenar','pijama','dormir','siesta','terapia','pastillas','paseo','pantalla','ordenar','visita','volver-casa','comer','beber','salir']),
+      m('m_pasos','Paso a paso','🧼',cat('pasos'))
     ],
     fin:[
       m('m_personas','Personas','👪',cat('personas')), m('m_lugares','Lugares','🏠',cat('lugares')),
@@ -31,11 +32,12 @@ function modsNuevos(){
     ]
   };
 }
-function fichaEj(){ return {id:'f_'+Math.random().toString(36).slice(2,7),nombre:'Mis estrellas',ficha:'⭐',meta:5,premio:'Mi premio',premioEmoji:'🎁',ganadas:0,premios:0}; }
+function carteraEj(){ return {ficha:'⭐',total:0,canjeados:0,premios:[{id:'p_1',nombre:'Chocolate',emoji:'🍫',costo:3},{id:'p_2',nombre:'Helado',emoji:'🍦',costo:5},{id:'p_3',nombre:'Tele 15 minutos',emoji:'📺',costo:6}]}; }
+function fichaEj_viejo(){ return {id:'f_'+Math.random().toString(36).slice(2,7),nombre:'Mis estrellas',ficha:'⭐',meta:5,premio:'Mi premio',premioEmoji:'🎁',ganadas:0,premios:0}; }
 function defaults(){
   const m = (id,nombre,emoji,items)=>({id,nombre,emoji,items});
   return {
-    v:1, activo:'m_verbos', mods3:true, mods4:true, mods5:true,
+    v:1, activo:'m_verbos', mods3:true, mods4:true, mods5:true, mods6:true,
     modulos:[...modsNuevos().ini,
       m('m_necesito','Necesito','🙋',['agua','baño','ayuda','hambre','sed','sueño','dolor','frio','calor','descanso','silencio','pañal']),
       m('m_emociones','Cómo estoy','😊',['feliz','triste','enojado','miedo','cansado','nervioso','tranquilo','aburrido','te-quiero']),
@@ -48,14 +50,27 @@ function defaults(){
       {id:'r_noche',nombre:'Antes de dormir',emoji:'🌙',pasos:['comer','bañarse','cepillar','baño','dormir']}
     ],
     tarjetas:[], ajustes:{voz:true, tam:'m', sonido:true},
-    semana:[[],[],[],[],[],[],[]], fichas:[fichaEj()], hechos:{}
+    semana:[[],[],[],[],[],[],[]], cartera:carteraEj(), hechos:{}
   };
 }
 function migrar(s){
   s.v = 2;
   s.ajustes = Object.assign({voz:true, tam:'m', sonido:true}, s.ajustes||{});
   if(!Array.isArray(s.semana) || s.semana.length!==7) s.semana = [[],[],[],[],[],[],[]];
-  if(!Array.isArray(s.fichas)) s.fichas = [fichaEj()];
+  if(!s.cartera){ // pasa de "tableros" al sistema de fichas acumuladas con premios canjeables
+    const old = Array.isArray(s.fichas) ? s.fichas : [];
+    s.cartera = carteraEj();
+    if(old.length){
+      s.cartera.ficha = old[0].ficha || '⭐';
+      s.cartera.total = old.reduce((a,f)=>a+(f.ganadas||0),0);
+      s.cartera.canjeados = old.reduce((a,f)=>a+(f.premios||0),0);
+      s.cartera.premios = old.map((f,i)=>({id:'p_m'+i,nombre:String(f.premio||'Premio').slice(0,40),emoji:f.premioEmoji||'🎁',costo:Math.max(1,f.meta||5)}));
+    }
+    s.rutinas.forEach(r=>{ r.fichas = r.tablero ? 1 : (r.fichas==null?1:r.fichas); delete r.tablero; });
+    s.semana.forEach(d=>d.forEach(it=>{ if(it.tablero){ it.fichas = 1; } delete it.tablero; }));
+  }
+  delete s.fichas;
+  s.rutinas.forEach(r=>{ if(r.fichas==null) r.fichas = 1; });
   if(!s.hechos || typeof s.hechos!=='object') s.hechos = {};
   if(!s.rutinas) s.rutinas = [];
   if(!s.tarjetas) s.tarjetas = [];
@@ -70,6 +85,13 @@ function migrar(s){
       s.modulos.splice(k>=0?k+1:0, 0, d);
     }
     s.mods5 = true;
+  }
+  if(!s.mods6){
+    if(!s.modulos.some(m=>m.id==='m_pasos')){
+      const d = modsNuevos().ini.find(m=>m.id==='m_pasos'); const k = s.modulos.findIndex(m=>m.id==='m_diario');
+      s.modulos.splice(k>=0?k+1:0, 0, d);
+    }
+    s.mods6 = true;
   }
   if(!s.mods4){
     const ya4 = id=>s.modulos.some(m=>m.id===id);
@@ -149,7 +171,7 @@ function marcar(id, on){
 }
 
 /* ---- estado de pantalla ---- */
-let V = {n:'home'}, edit = false, frase = [], playing = null, cele = null, subRut = 'sem', sheet = null, W = {ref:null,tipo:'c',hora:'',dias:[]}, SQ = {nombre:'',pasos:[]};
+let V = {n:'home'}, edit = false, frase = [], playing = null, cele = null, subRut = 'sem', sheet = null, W = {ref:null,tipo:'c',hora:'',dias:[]}, SQ = {nombre:'',pasos:[],fichas:1,edit:null};
 function ir(n, p){ sheet = null; V = Object.assign({n}, p||{}); render(); window.scrollTo(0,0); }
 function porId(lista, id){ return lista.find(x=>x.id===id); }
 
@@ -186,7 +208,11 @@ function itemInfo(it){
   if(it.tipo==='r'){ const r=porId(S.rutinas,it.ref); return r?{e:r.emoji,t:r.nombre,sub:r.pasos.length+' pasos'}:null; }
   const t=tarjeta(it.ref); return t?{e:t.foto?`<img src="${t.foto}" alt="">`:esc(t.emoji),t:t.etiqueta,sub:''}:null;
 }
-function itf(it){ return it.tablero ? porId(S.fichas,it.tablero) : null; }
+function fichasDe(it){
+  if(typeof it.fichas==='number') return it.fichas;
+  if(it.tipo==='r'){ const r=porId(S.rutinas,it.ref); return r&&typeof r.fichas==='number' ? r.fichas : 1; }
+  return 0;
+}
 function ordenarDia(i){
   const k = x=>x.hora||'99:99';
   S.semana[i] = S.semana[i].map((x,j)=>[x,j]).sort((a,b)=>k(a[0])<k(b[0])?-1:k(a[0])>k(b[0])?1:a[1]-b[1]).map(x=>x[0]);
@@ -205,11 +231,11 @@ function vRut(){
   const intro = S.ajustes.introRut===false ? '' : `<div class="intro"><b>Así de fácil:</b><ol><li>Tocá <b>➕ Agregar</b> y elegí qué hace en el día.</li><li>Cuando lo haga, <b>tocá la actividad</b>: se pone verde ✓.</li><li>¡Gana fichas y premios! ⭐</li></ol><button class="btn pri" data-act="introok" style="text-align:center">Entendido</button></div>`;
   const prog = esHoy && items.length ? `<div class="prog"><div style="width:${Math.round(hechosN*100/items.length)}%"></div><span>${hechosN} de ${items.length} hechos</span></div>` : '';
   const filas = items.map(it=>{
-    const inf = itemInfo(it), done = esHoy && hechos.includes(it.id), esSeq = it.tipo==='r', f = itf(it);
+    const inf = itemInfo(it), done = esHoy && hechos.includes(it.id), esSeq = it.tipo==='r', nf = fichasDe(it);
     return `<div class="rw ${done?'done':''} ${sig&&sig.id===it.id?'next':''}">
       <button class="rmain" data-act="ropen" data-id="${it.id}" data-d="${di}">
         <span class="rhora">${esc(fh(it.hora))}</span><span class="re">${inf.e}</span>
-        <span class="rt">${esc(inf.t)}<small>${sig&&sig.id===it.id?'👉 Ahora':''}${esSeq?(sig&&sig.id===it.id?' · ':'')+inf.sub+' (paso a paso)':''}${f?(sig&&sig.id===it.id||esSeq?' · ':'')+'da '+esc(f.ficha):''}</small></span>
+        <span class="rt">${esc(inf.t)}<small>${sig&&sig.id===it.id?'👉 Ahora':''}${esSeq?(sig&&sig.id===it.id?' · ':'')+inf.sub+' (paso a paso)':''}${nf?(sig&&sig.id===it.id||esSeq?' · ':'')+'gana '+(nf>1?nf+' ':'')+esc(S.cartera.ficha):''}</small></span>
         <span class="rchk ${done?'on':''}">${done?'✓':(esSeq&&esHoy?'▶':'')}</span></button>
       <button class="rmore" data-act="rmore" data-id="${it.id}" data-d="${di}" aria-label="Opciones">⋯</button></div>`;
   }).join('');
@@ -223,20 +249,28 @@ function vRut(){
 
 /* ---- elegir tarjetas SIN buscador: siempre por pestañas ---- */
 function tabsPick(act){
-  const tab = V.tab || (S.modulos[0]||{}).id;
-  const chips = S.modulos.map(m=>`<button class="chip ${tab===m.id?'sel':''}" data-act="${act}" data-id="${m.id}">${esc(m.emoji)} ${esc(m.nombre)}</button>`).join('');
-  const m = porId(S.modulos,tab) || S.modulos[0];
+  const mods = S.modulos.concat(S.tarjetas.length ? [{id:'_mias',nombre:'Mis tarjetas',emoji:'⭐',items:S.tarjetas.map(t=>t.id)}] : []);
+  const tab = V.tab || (mods[0]||{}).id;
+  const chips = mods.map(m=>`<button class="chip ${tab===m.id?'sel':''}" data-act="${act}" data-id="${m.id}">${esc(m.emoji)} ${esc(m.nombre)}</button>`).join('');
+  const m = mods.find(x=>x.id===tab) || mods[0];
   return {tab, html:`<div class="chips">${chips}</div>`, items: m ? m.items : []};
 }
+const PLANTILLAS = [
+  {n:'Lavarse los dientes',e:'🪥',p:['ir-bano','agarrar-pasta','abrir-pasta','agarrar-cepillo','poner-pasta','cepillar-1min','abrir-canilla','enjuagar-boca','lavar-cepillo','guardar-cepillo','tapar-pasta','guardar-pasta','lavar-boca','cerrar-canilla','secar-boca']},
+  {n:'Lavarse las manos',e:'🧼',p:['abrir-canilla','mojar-manos','jabon','frotar','enjuagar-manos','cerrar-canilla','secar-manos']},
+  {n:'Ir al baño',e:'🚽',p:['ir-bano','bajar-pantalon','sentarme-inodoro','hacer-pipi','limpiarme','subir-pantalon','tirar-cadena','abrir-canilla','jabon','frotar','enjuagar-manos','cerrar-canilla','secar-manos']},
+  {n:'Vestirse',e:'👕',p:['sacar-pijama','poner-remera','poner-pantalon','poner-medias','poner-zapatillas']},
+  {n:'Bañarse',e:'🛁',p:['sacar-ropa','abrir-canilla','mojarme','shampoo','jabon','enjuagarme','cerrar-canilla','secarme','poner-pantalon']}
+];
 function vAdd1(){
   const t = tabsPick('ptab');
   const rut = S.rutinas.length ? `<div class="box"><h2>🔁 Rutinas paso a paso</h2>${S.rutinas.map(r=>`<button class="btn" data-act="pickr" data-id="${r.id}">${esc(r.emoji)} ${esc(r.nombre)} <small style="color:var(--muted)">· ${r.pasos.length} pasos</small></button>`).join('')}</div>` : '';
+  const tpl = `<div class="box"><h2>✨ Rutinas listas para usar</h2><p>Ya vienen armadas paso a paso. Tocá una para usarla.</p>${PLANTILLAS.map((t,i)=>`<button class="btn" data-act="tpl" data-i="${i}">${t.e} ${esc(t.n)} <small style="color:var(--muted)">· ${t.p.length} pasos</small></button>`).join('')}</div>`;
   return cab('Paso 1 de 3', backBtn('rutback'))
     + `<div class="page"><div class="paso">¿Qué va a hacer?</div><p class="ayuda">Elegí una tarjeta de las pestañas, como en Hablar.</p></div>`
     + t.html
     + `<div class="grid">${t.items.map(id=>{ const c=tarjeta(id); return c?`<button class="card" style="--c:${color(c)}" data-act="pickc" data-id="${esc(id)}">${imHtml(c)}<span class="lb">${esc(c.etiqueta)}</span></button>`:''; }).join('')}</div>`
-    + rut
-    + `<div class="page"><button class="btn" style="text-align:center" data-act="newseq">🔁 Armar una rutina paso a paso</button></div>`;
+    + `<div class="page">${rut}${tpl}<button class="btn pri" style="text-align:center" data-act="newseq">🔁 Armar una rutina paso a paso</button></div>`;
 }
 function selInfo(){ return itemInfo({tipo:W.tipo,ref:W.ref}) || {e:'',t:''}; }
 function vAdd2(){
@@ -259,15 +293,19 @@ function vAdd3(){
 }
 /* rutina paso a paso (armada con tarjetas de las pestañas) */
 function vSeq(){
-  const t = tabsPick('ptab');
-  const pasos = SQ.pasos.map((id,i)=>{ const c=tarjeta(id); return c?`<button class="sqs" data-act="sqrm" data-i="${i}"><b>${i+1}</b> ${c.foto?'':esc(c.emoji)} ${esc(c.etiqueta)} <u>✕</u></button>`:''; }).join('');
-  return cab('Rutina paso a paso', backBtn('go:add1'))
-    + `<div class="page"><div class="box"><h2>Nombre (opcional)</h2><input type="text" maxlength="30" placeholder="Ej.: Ir a dormir" value="${esc(SQ.nombre)}" data-in="sqn"></div>
-      <div class="box"><h2>Pasos, en orden</h2><p>Tocá las tarjetas de abajo en el orden en que se hacen. Para sacar un paso, tocalo.</p>
+  const t = tabsPick('ptab'), c = S.cartera;
+  const pasos = SQ.pasos.map((id,i)=>{ const k=tarjeta(id); return k?`<div class="sqr"><b>${i+1}</b><span class="se">${k.foto?`<img src="${k.foto}" alt="">`:esc(k.emoji)}</span><span class="st">${esc(k.etiqueta)}</span>
+    <button data-act="squp" data-i="${i}" ${i===0?'disabled':''}>▲</button><button data-act="sqdown" data-i="${i}" ${i===SQ.pasos.length-1?'disabled':''}>▼</button><button data-act="sqrm" data-i="${i}">✕</button></div>`:''; }).join('');
+  const edicion = SQ.edit ? `<div class="page"><div class="box"><button class="btn" data-act="exprut" data-id="${SQ.edit}">📤 Exportar esta rutina</button><button class="btn del" data-act="delrut" data-id="${SQ.edit}">🗑️ Eliminar esta rutina</button></div></div>` : '';
+  return cab(SQ.edit?'Editar rutina':'Rutina paso a paso', backBtn(SQ.edit?'go:rut':'go:add1'))
+    + `<div class="page"><div class="box"><h2>Nombre</h2><input type="text" maxlength="30" placeholder="Ej.: Lavarse los dientes" value="${esc(SQ.nombre)}" data-in="sqn"></div>
+      <div class="box"><h2>${esc(c.ficha)} Fichas que gana al terminarla</h2><div class="dias7" style="grid-template-columns:repeat(4,1fr)">${[0,1,2,3].map(n=>`<button class="${SQ.fichas===n?'sel':''}" data-act="sqf" data-n="${n}">${n}</button>`).join('')}</div></div>
+      <div class="box"><h2>Pasos, en orden</h2><p>Tocá las tarjetas de abajo en el orden en que se hacen. Con ▲ ▼ los movés y con ✕ los sacás.</p>
       <div class="sqlist">${pasos||'<span class="vacia">Todavía no hay pasos</span>'}</div></div></div>`
     + t.html
-    + `<div class="grid">${t.items.map(id=>{ const c=tarjeta(id); return c?`<button class="card" style="--c:${color(c)}" data-act="sqadd" data-id="${esc(id)}">${imHtml(c)}<span class="lb">${esc(c.etiqueta)}</span></button>`:''; }).join('')}</div>
-      <div class="foot"><button class="btn pri gran" style="text-align:center" data-act="sqdone">Listo · ${SQ.pasos.length} ${SQ.pasos.length===1?'paso':'pasos'} ›</button></div>`;
+    + `<div class="grid">${t.items.map(id=>{ const k=tarjeta(id); return k?`<button class="card" style="--c:${color(k)}" data-act="sqadd" data-id="${esc(id)}">${imHtml(k)}<span class="lb">${esc(k.etiqueta)}</span></button>`:''; }).join('')}</div>
+      <div class="page"><button class="btn" style="text-align:center" data-act="sqncard">➕ Crear una tarjeta propia (con foto)</button></div>${edicion}
+      <div class="foot"><button class="btn pri gran" style="text-align:center" data-act="sqdone">${SQ.edit?'Guardar cambios':'Listo'} · ${SQ.pasos.length} ${SQ.pasos.length===1?'paso':'pasos'} ›</button></div>`;
 }
 function vSheet(){
   if(!sheet) return '';
@@ -280,49 +318,51 @@ function vSheet(){
   const it = S.semana[sheet.d].find(x=>x.id===sheet.id); const inf = it && itemInfo(it); if(!inf){ sheet=null; return ''; }
   return `<div class="sbk" data-act="sheetx"></div><div class="sheet"><h2>${inf.e.startsWith('<')?'':inf.e} ${esc(inf.t)}</h2>
     <label class="lbl">🕒 Hora</label><div class="row"><input type="time" value="${esc(it.hora||'')}" data-in="whora" data-id="${it.id}" data-d="${sheet.d}"><button class="btn sm" style="margin:0;width:auto" data-act="whora0">Sin hora</button></div>
-    ${S.fichas.length?`<label class="lbl">⭐ Ficha al hacerlo</label><select data-in="wfic" data-id="${it.id}" data-d="${sheet.d}"><option value="">Ninguna</option>${S.fichas.map(f=>`<option value="${f.id}" ${it.tablero===f.id?'selected':''}>${esc(f.ficha)} ${esc(f.nombre)}</option>`).join('')}</select>`:''}
+    <label class="lbl">${esc(S.cartera.ficha)} Fichas que gana al hacerlo</label><div class="dias7" style="grid-template-columns:repeat(4,1fr)">${[0,1,2,3].map(n=>`<button class="${fichasDe(it)===n?'sel':''}" data-act="wfn" data-id="${it.id}" data-d="${sheet.d}" data-n="${n}">${n}</button>`).join('')}</div>
     ${it.tipo==='r'?`<button class="btn" data-act="erut" data-id="${it.ref}">✏️ Cambiar los pasos de la rutina</button>`:''}
     <button class="btn del" data-act="wrm2" data-id="${it.id}" data-d="${sheet.d}">🗑️ Sacar de este día</button>
     <button class="btn pri" style="text-align:center" data-act="sheetx">Listo</button></div>`;
 }
 
 function completar(it, esRut){
-  const inf = itemInfo(it) || {t:''}, f = itf(it);
-  if(f){ darFicha(f, 'Hizo: '+inf.t); return; }
+  const inf = itemInfo(it) || {t:''}, n = fichasDe(it);
+  if(n>0){ dar(n, (esRut?'Terminó: ':'Hizo: ')+inf.t); return; }
   const todos = S.semana[hoyIdx()].filter(x=>itemInfo(x));
   if(todos.length && todos.every(x=>hechosHoy().includes(x.id))) celebrar('ok','¡Día completo!','Hizo todo lo de hoy','🌟','¡Día completo! Muy bien');
   else if(esRut) celebrar('ok','¡Muy bien!','Terminamos: '+inf.t,'🎉','¡Muy bien! Terminamos');
   else { tono('ok'); hablar('¡Muy bien!'); render(); }
 }
-/* ---- Fichas (economía de fichas) ---- */
+/* ---- Fichas: se juntan y se canjean por premios ---- */
+const EMOJIS_FICHA = ['⭐','🌟','🏅','🍀','❤️','🚀','🐶','🧩','🍎','🐸','🦄','⚽'];
+const EMOJIS_PREMIO = ['🍫','🍦','📺','🎮','🍕','🎈','⚽','🧸','🎡','📱','🏊','🍿','🎁','🍪','🚲','🎬'];
 function vFic(){
-  const tableros = S.fichas.map(f=>{
-    const lleno = f.ganadas>=f.meta;
-    const slots = Array.from({length:f.meta},(_,i)=>`<span class="slotf ${i<f.ganadas?'on':''}">${esc(f.ficha)}</span>`).join('');
-    return `<div class="box ficha"><div class="row"><h2 style="margin:0">${esc(f.nombre)}</h2>${edit?`<button class="btn sm" style="margin:0;width:auto" data-act="efic" data-id="${f.id}">✏️</button>`:''}</div>
-      <div class="slots">${slots}</div>
-      <div class="meta">${f.ganadas} de ${f.meta} · Premio: ${esc(f.premioEmoji)} ${esc(f.premio)}</div>
-      ${lleno?`<button class="btn pri gran" data-act="canjear" data-id="${f.id}">🎁 ¡Reclamar el premio!</button>`
-             :`<button class="btn pri gran" data-act="ficha" data-id="${f.id}">${esc(f.ficha)} ¡Lo cumplió!</button>`}
-      ${edit&&f.ganadas>0?`<button class="btn" data-act="quitaf" data-id="${f.id}">↩ Quitar una ficha</button>`:''}
-      ${f.premios?`<p style="margin:8px 0 0">Premios ganados: ${f.premios} 🏆</p>`:''}</div>`;
+  const c = S.cartera, t = c.total;
+  const monedas = Array.from({length:Math.min(t,24)},()=>`<span>${esc(c.ficha)}</span>`).join('') + (t>24?`<b class="mas">+${t-24}</b>`:'');
+  const premios = c.premios.slice().sort((a,b)=>a.costo-b.costo).map(p=>{
+    const ok = t>=p.costo, pct = Math.min(100,Math.round(t*100/p.costo));
+    return `<div class="pre ${ok?'ok':''}"><div class="pe">${esc(p.emoji)}</div>
+      <div class="pt"><b>${esc(p.nombre)}</b><div class="pbar"><div style="width:${pct}%"></div></div><small>Cuesta ${p.costo} ${esc(c.ficha)} · ${ok?'¡Ya alcanza!':'faltan '+(p.costo-t)}</small></div>
+      ${edit?`<button class="btn sm" style="margin:0;width:auto" data-act="epre" data-id="${p.id}">✏️</button>`
+            :(ok?`<button class="btn pri" style="margin:0;width:auto;text-align:center" data-act="canjear" data-id="${p.id}">🎁 Canjear</button>`:`<span class="falta">${p.costo-t}</span>`)}</div>`;
   }).join('');
   return cab('⭐ Fichas','',topBtns())
-    + `<div class="page"><div class="box"><p style="margin:0">Cada vez que cumple lo acordado (por ejemplo, terminar una rutina), tocá el botón: gana una ficha. Al completar el tablero, recibe su premio. También podés vincular una rutina a un tablero desde ✏️.</p></div>
-    ${tableros}${edit?`<button class="btn" data-act="newfic">➕ Nuevo tablero</button>`:''}
-    ${!S.fichas.length?'<div class="vacio">No hay tableros. Activá ✏️ para crear uno.</div>':''}</div>`;
+    + `<div class="page"><div class="cartera"><div class="ct">Mis fichas</div><div class="cn">${t}</div><div class="monedas">${monedas||'<span class="vacia">Todavía no tiene fichas</span>'}</div></div>
+    <div class="box"><p style="margin:0">Cada rutina o actividad que termina suma fichas. Cuando junta las necesarias, ¡las canjea por un premio!</p></div>
+    <div class="paso" style="font-size:1.25rem">🎁 Premios</div>
+    ${premios||'<div class="vacio">Todavía no hay premios. Activá ✏️ y agregá los que quieras.</div>'}
+    ${edit?`<button class="btn pri" style="text-align:center" data-act="newpre">➕ Agregar un premio</button>
+      <div class="box"><h2>Ficha</h2>${emojiPicker(c.ficha,'fichaemoji','c',EMOJIS_FICHA)}</div>
+      <div class="box"><h2>Ajustar fichas a mano</h2><div class="row"><button class="btn" style="text-align:center;margin:0" data-act="menos1">− 1</button><button class="btn" style="text-align:center;margin:0" data-act="mas1">+ 1</button></div></div>`
+      :`<button class="btn" style="text-align:center" data-act="mas1x">${esc(c.ficha)} Dar 1 ficha por otra cosa</button>`}
+    ${c.canjeados?`<p style="text-align:center;color:var(--muted);font-weight:600">Premios canjeados: ${c.canjeados} 🏆</p>`:''}</div>`;
 }
-const EMOJIS_FICHA = ['⭐','🌟','🏅','🍀','❤️','🚀','🐶','🧩','🍎','🐸','🦄','⚽'];
-const EMOJIS_PREMIO = ['🎁','🍦','🎮','📺','🍫','🎈','⚽','🧸','🎡','📱','🍕','🏊'];
-function vEFic(){
-  const f = porId(S.fichas, V.id); if(!f) return vFic();
-  return cab('Editar tablero', backBtn('go:fic'))
-    + `<div class="page"><div class="box"><h2>¿Qué se premia?</h2><p>Escribí lo acordado. Ej.: “Lavarse los dientes”.</p><input type="text" maxlength="40" value="${esc(f.nombre)}" data-in="fname" data-id="${f.id}">
-      <h2 style="margin-top:12px">Ficha</h2>${emojiPicker(f.ficha,'fichaemoji',f.id,EMOJIS_FICHA)}</div>
-      <div class="box"><h2>Fichas para el premio</h2><div class="row" style="margin-top:8px"><button class="btn" style="text-align:center;margin:0" data-act="metadec" data-id="${f.id}">−</button><div style="text-align:center;font-size:1.6rem;font-weight:700;flex:none;width:70px">${f.meta}</div><button class="btn" style="text-align:center;margin:0" data-act="metainc" data-id="${f.id}">+</button></div></div>
-      <div class="box"><h2>Premio</h2><input type="text" maxlength="40" value="${esc(f.premio)}" data-in="fprem" data-id="${f.id}">
-      <h2 style="margin-top:12px">Ícono del premio</h2>${emojiPicker(f.premioEmoji,'premoji',f.id,EMOJIS_PREMIO)}</div>
-      <div class="box"><button class="btn del" data-act="delfic" data-id="${f.id}">🗑️ Eliminar tablero</button></div></div>`;
+function vEPre(){
+  const p = porId(S.cartera.premios, V.id); if(!p) return vFic();
+  return cab('Editar premio', backBtn('go:fic'))
+    + `<div class="page"><div class="box"><h2>¿Qué es el premio?</h2><p>Ej.: “Chocolate”, “Ver la tele 20 minutos”, “Salir a la plaza”.</p><input type="text" maxlength="40" value="${esc(p.nombre)}" data-in="pnom" data-id="${p.id}">
+      <h2 style="margin-top:12px">Ícono</h2>${emojiPicker(p.emoji,'premoji',p.id,EMOJIS_PREMIO)}</div>
+      <div class="box"><h2>¿Cuántas fichas cuesta?</h2><div class="row" style="margin-top:8px"><button class="btn" style="text-align:center;margin:0" data-act="pcdec" data-id="${p.id}">−</button><div style="text-align:center;font-size:1.8rem;font-weight:700;flex:none;width:80px">${p.costo}</div><button class="btn" style="text-align:center;margin:0" data-act="pcinc" data-id="${p.id}">+</button></div></div>
+      <div class="box"><button class="btn del" data-act="delpre" data-id="${p.id}">🗑️ Eliminar premio</button></div></div>`;
 }
 function vCele(){
   if(!cele) return '';
@@ -339,12 +379,13 @@ function celebrar(tipo, titulo, sub, emoji, voz){
   clearTimeout(celebrar._t);
   if(tipo!=='premio') celebrar._t = setTimeout(()=>{ if(cele){ cele=null; render(); } }, 4200);
 }
-function darFicha(f, motivo){
-  f.ganadas = Math.min(f.meta, f.ganadas+1); guardar();
-  if(f.ganadas>=f.meta) celebrar('premio','¡Completó el tablero!','Premio: '+f.premioEmoji+' '+f.premio, f.premioEmoji, '¡Ganaste tu premio! '+f.premio);
-  else celebrar('ficha','¡Muy bien!', motivo||('Ficha '+f.ganadas+' de '+f.meta), f.ficha);
-}
 
+function dar(n, motivo){
+  const c = S.cartera, antes = c.total; c.total += n; guardar();
+  const nuevo = c.premios.filter(p=>p.costo<=c.total && p.costo>antes).sort((x,y)=>y.costo-x.costo)[0];
+  const sub = (motivo?motivo+' · ':'')+'Tenés '+c.total+' '+c.ficha + (nuevo?' · ¡Ya alcanza para '+nuevo.emoji+' '+nuevo.nombre+'!':'');
+  celebrar('ficha', n>1?'¡Ganó '+n+' fichas!':'¡Ganó una ficha!', sub, c.ficha, '¡Muy bien! Ganaste '+(n>1?n+' fichas':'una ficha')+(nuevo?'. Ya podés canjear '+nuevo.nombre:''));
+}
 function listaItems(arr, tipo, id){
   return arr.map((cid,i)=>{
     const t = tarjeta(cid); if(!t) return '';
@@ -366,19 +407,6 @@ function vEditMod(){
       ${listaItems(m.items,'m',m.id) || '<p>Todavía no hay tarjetas.</p>'}
       <button class="btn pri" data-act="pick" data-t="m" data-id="${m.id}" style="margin-top:12px">➕ Agregar tarjetas</button></div>
       <div class="box"><button class="btn" data-act="expmod" data-id="${m.id}">📤 Exportar este módulo</button><button class="btn del" data-act="delmod" data-id="${m.id}">🗑️ Eliminar módulo</button></div></div>`;
-}
-function vEditRut(){
-  const r = porId(S.rutinas, V.id); if(!r) return vHome();
-  return cab('Editar rutina', backBtn('go:lista'))
-    + `<div class="page"><div class="box"><h2>Nombre</h2><input type="text" maxlength="30" value="${esc(r.nombre)}" data-in="rutname" data-id="${r.id}">
-      <h2 style="margin-top:12px">Ícono</h2>${emojiPicker(r.emoji,'rutemoji',r.id)}</div>
-      <div class="box"><h2>Ficha al terminar</h2><p>Si la vinculás a un tablero de Fichas, al terminar la rutina gana una ficha automáticamente.</p>
-        <select data-in="rtab" data-id="${r.id}"><option value="">Ninguna</option>${S.fichas.map(f=>`<option value="${f.id}" ${r.tablero===f.id?'selected':''}>${esc(f.ficha)} ${esc(f.nombre)}</option>`).join('')}</select></div>
-      <div class="box"><h2>Pasos, en orden</h2><p>Cada paso es una tarjeta (una acción, un lugar, un objeto…). Podés repetir tarjetas.</p>
-      ${listaItems(r.pasos,'r',r.id) || '<p>Todavía no hay pasos.</p>'}
-      <button class="btn pri" data-act="pick" data-t="r" data-id="${r.id}" style="margin-top:12px">➕ Agregar pasos</button>
-      ${r.pasos.length?`<button class="btn" data-act="play" data-id="${r.id}">▶ Probar la rutina</button>`:''}</div>
-      <div class="box"><button class="btn" data-act="exprut" data-id="${r.id}">📤 Exportar esta rutina</button><button class="btn del" data-act="delrut" data-id="${r.id}">🗑️ Eliminar rutina</button></div></div>`;
 }
 function todasTarjetas(){ return Object.values(BASE).concat(S.tarjetas); }
 function vPick(){
@@ -443,7 +471,7 @@ function vPlay(){
 function render(){
   const app = document.getElementById('app');
   document.documentElement.style.setProperty('--card-size', ({s:'86px',m:'104px',l:'132px'})[S.ajustes.tam] || '104px');
-  const vistas = {home:vHome, rut:vRut, add1:vAdd1, add2:vAdd2, add3:vAdd3, seq:vSeq, fic:vFic, efic:vEFic, emod:vEditMod, erut:vEditRut, pick:vPick, ncard:vNCard, aj:vAj};
+  const vistas = {home:vHome, rut:vRut, add1:vAdd1, add2:vAdd2, add3:vAdd3, seq:vSeq, fic:vFic, epre:vEPre, emod:vEditMod, pick:vPick, ncard:vNCard, aj:vAj};
   app.innerHTML = (vistas[V.n]||vHome)() + (['home','rut','fic'].includes(V.n) && !playing ? nav() : '') + (playing ? vPlay() : '') + vSheet() + vCele();
 }
 
@@ -463,7 +491,7 @@ const ACC = {
   newmod(){ const m={id:uid('m_'),nombre:'Nuevo módulo',emoji:'⭐',items:[]}; S.modulos.push(m); S.activo=m.id; guardar(); ir('emod',{id:m.id}); },
   newrut(){ const r={id:uid('r_'),nombre:'Nueva rutina',emoji:'🔁',pasos:[]}; S.rutinas.push(r); guardar(); ir('erut',{id:r.id}); },
   go(d){ ir(d.k); },
-  emod(d){ ir('emod',{id:d.id}); }, erut(d){ ir('erut',{id:d.id}); },
+  emod(d){ ir('emod',{id:d.id}); },
   modemoji(d){ porId(S.modulos,d.id).emoji=d.e; guardar(); render(); },
   rutemoji(d){ porId(S.rutinas,d.id).emoji=d.e; guardar(); render(); },
   up(d){ mover(lista(d.t,d.id),+d.i,-1); guardar(); render(); },
@@ -485,6 +513,7 @@ const ACC = {
     const t = {id:uid('c_'), etiqueta:c.etiqueta.trim(), emoji:(c.emoji||'⭐').trim()||'⭐', foto:c.foto||'', cat:c.cat};
     if(!t.foto) delete t.foto;
     S.tarjetas.push(t);
+    if(V.ret.t==='sq'){ SQ.pasos.push(t.id); guardar(); toast('Tarjeta creada y agregada'); ir('seq'); return; }
     const l = lista(V.ret.t,V.ret.id); if(l) l.push(t.id);
     guardar(); toast('Tarjeta creada y agregada'); ir('pick',{t:V.ret.t,id:V.ret.id,q:''});
   },
@@ -493,7 +522,7 @@ const ACC = {
   play(d){ playing={id:d.id,i:0,w:d.w||null}; render(); const r=porId(S.rutinas,d.id); const t=tarjeta(r.pasos[0]); hablar(t&&t.etiqueta); },
   stopPlay(){ playing=null; render(); },
   pprev(){ if(playing.i>0){ playing.i--; render(); ACC.pspeak(); } },
-  pnext(){ const r=porId(S.rutinas,playing.id); if(playing.i>=r.pasos.length-1){ const w=playing.w; playing=null; if(w) marcar(w,true); const itw=w&&S.semana[hoyIdx()].find(x=>x.id===w); const f=(itw&&itf(itw))||(r.tablero&&porId(S.fichas,r.tablero)); if(f) darFicha(f,'Terminó: '+r.nombre); else if(itw) completar(itw,true); else celebrar('ok','¡Muy bien!','Terminamos: '+r.nombre,'🎉','¡Muy bien! Terminamos'); } else { playing.i++; render(); ACC.pspeak(); } },
+  pnext(){ const r=porId(S.rutinas,playing.id); if(playing.i>=r.pasos.length-1){ const w=playing.w; playing=null; if(w) marcar(w,true); const itw=w&&S.semana[hoyIdx()].find(x=>x.id===w); if(itw) completar(itw,true); else { const n=typeof r.fichas==='number'?r.fichas:1; if(n>0) dar(n,'Terminó: '+r.nombre); else celebrar('ok','¡Muy bien!','Terminamos: '+r.nombre,'🎉','¡Muy bien! Terminamos'); } } else { playing.i++; render(); ACC.pspeak(); } },
   pspeak(){ const r=porId(S.rutinas,playing.id); const t=tarjeta(r.pasos[playing.i]); hablar(t&&t.etiqueta); },
   expmod(d){ const m=porId(S.modulos,d.id); descargar({tipo:'ecos_modulo_v1',modulo:{nombre:m.nombre,emoji:m.emoji,items:m.items},tarjetas:usadas(m.items)},`ecos-modulo-${slug(m.nombre)}.json`); },
   exprut(d){ const r=porId(S.rutinas,d.id); descargar({tipo:'ecos_rutina_v1',rutina:{nombre:r.nombre,emoji:r.emoji,pasos:r.pasos},tarjetas:usadas(r.pasos)},`ecos-rutina-${slug(r.nombre)}.json`); },
@@ -535,33 +564,48 @@ const ACC = {
     guardar(); tono('ok'); toast('¡Listo! Agregado ✓');
     ir('rut',{dia: W.dias.includes(hoyIdx()) ? hoyIdx() : W.dias[0]});
   },
-  newseq(){ SQ={nombre:'',pasos:[]}; ir('seq'); },
+  newseq(){ SQ={nombre:'',pasos:[],fichas:1,edit:null}; ir('seq'); },
+  tpl(d){ const t=PLANTILLAS[+d.i]; const r={id:uid('r_'),nombre:t.n,emoji:t.e,pasos:t.p.slice(),fichas:1}; S.rutinas.push(r); guardar(); W.tipo='r'; W.ref=r.id; W.hora=''; ir('add2'); },
+  erut(d){ const r=porId(S.rutinas,d.id); if(!r) return; SQ={nombre:r.nombre,pasos:r.pasos.slice(),fichas:typeof r.fichas==='number'?r.fichas:1,edit:r.id}; ir('seq'); },
+  sqf(d){ SQ.fichas=+d.n; const y=window.scrollY; render(); window.scrollTo(0,y); },
+  squp(d){ mover(SQ.pasos,+d.i,-1); const y=window.scrollY; render(); window.scrollTo(0,y); },
+  sqdown(d){ mover(SQ.pasos,+d.i,1); const y=window.scrollY; render(); window.scrollTo(0,y); },
   sqadd(d){ SQ.pasos.push(d.id); const t=tarjeta(d.id); hablar(t&&t.etiqueta); const y=window.scrollY; render(); window.scrollTo(0,y); },
   sqrm(d){ SQ.pasos.splice(+d.i,1); const y=window.scrollY; render(); window.scrollTo(0,y); },
+  sqncard(){ ir('ncard',{ret:{t:'sq'}}); },
   sqdone(){
     if(!SQ.pasos.length){ toast('Elegí al menos un paso'); return; }
     const primero=tarjeta(SQ.pasos[0]); const nombre=(SQ.nombre||'').trim() || ((primero?primero.etiqueta:'Rutina')+(SQ.pasos.length>1?' y '+(SQ.pasos.length-1)+' más':''));
-    const r={id:uid('r_'),nombre:nombre.slice(0,30),emoji:'🔁',pasos:SQ.pasos.slice()}; S.rutinas.push(r); guardar();
+    if(SQ.edit){ const r=porId(S.rutinas,SQ.edit); if(r){ r.nombre=nombre.slice(0,30); r.pasos=SQ.pasos.slice(); r.fichas=SQ.fichas; guardar(); toast('Rutina guardada ✓'); } ir('rut'); return; }
+    const r={id:uid('r_'),nombre:nombre.slice(0,30),emoji:'🔁',pasos:SQ.pasos.slice(),fichas:SQ.fichas}; S.rutinas.push(r); guardar();
     W.tipo='r'; W.ref=r.id; W.hora=''; ir('add2');
   },
   /* fichas */
-  ficha(d){ const f=porId(S.fichas,d.id); if(f) darFicha(f); },
-  canjear(d){ const f=porId(S.fichas,d.id); if(!f) return; f.ganadas=0; f.premios=(f.premios||0)+1; guardar(); tono('ok'); toast('¡A disfrutar el premio! '+f.premioEmoji); render(); },
-  quitaf(d){ const f=porId(S.fichas,d.id); if(f&&f.ganadas>0){ f.ganadas--; guardar(); render(); } },
-  efic(d){ ir('efic',{id:d.id}); },
-  newfic(){ const f=fichaEj(); f.nombre='Nuevo tablero'; S.fichas.push(f); guardar(); ir('efic',{id:f.id}); },
-  fichaemoji(d){ porId(S.fichas,d.id).ficha=d.e; guardar(); render(); },
-  premoji(d){ porId(S.fichas,d.id).premioEmoji=d.e; guardar(); render(); },
-  metadec(d){ const f=porId(S.fichas,d.id); if(f.meta>2){ f.meta--; f.ganadas=Math.min(f.ganadas,f.meta); guardar(); render(); } },
-  metainc(d){ const f=porId(S.fichas,d.id); if(f.meta<12){ f.meta++; guardar(); render(); } },
-  delfic(d){ if(!confirm('¿Eliminar este tablero?')) return; S.fichas=S.fichas.filter(f=>f.id!==d.id); S.rutinas.forEach(r=>{ if(r.tablero===d.id) delete r.tablero; }); S.semana.forEach(dia=>dia.forEach(it=>{ if(it.tablero===d.id) delete it.tablero; })); guardar(); ir('fic'); }
+  canjear(d){
+    const c=S.cartera, p=porId(c.premios,d.id); if(!p) return;
+    if(c.total<p.costo){ toast('Todavía no alcanzan las fichas'); return; }
+    if(!confirm('¿Canjear “'+p.nombre+'” por '+p.costo+' fichas?')) return;
+    c.total-=p.costo; c.canjeados=(c.canjeados||0)+1; guardar();
+    celebrar('premio','¡Premio!',p.emoji+' '+p.nombre+' · Le quedan '+c.total+' '+c.ficha,p.emoji,'¡Ganaste '+p.nombre+'!');
+  },
+  mas1(){ S.cartera.total++; guardar(); render(); },
+  menos1(){ if(S.cartera.total>0){ S.cartera.total--; guardar(); render(); } },
+  mas1x(){ dar(1,''); },
+  epre(d){ ir('epre',{id:d.id}); },
+  newpre(){ const p={id:uid('p_'),nombre:'Nuevo premio',emoji:'🎁',costo:5}; S.cartera.premios.push(p); guardar(); ir('epre',{id:p.id}); },
+  fichaemoji(d){ S.cartera.ficha=d.e; guardar(); render(); },
+  premoji(d){ porId(S.cartera.premios,d.id).emoji=d.e; guardar(); render(); },
+  pcdec(d){ const p=porId(S.cartera.premios,d.id); if(p.costo>1){ p.costo--; guardar(); render(); } },
+  pcinc(d){ const p=porId(S.cartera.premios,d.id); if(p.costo<99){ p.costo++; guardar(); render(); } },
+  delpre(d){ if(!confirm('¿Eliminar este premio?')) return; S.cartera.premios=S.cartera.premios.filter(p=>p.id!==d.id); guardar(); ir('fic'); },
+  wfn(d){ const it=S.semana[+d.d].find(x=>x.id===d.id); if(it){ it.fichas=+d.n; guardar(); render(); } }
 };
 function acc(a, d){
   if(a.startsWith('emod:')) return ir('emod',{id:a.slice(5)});
-  if(a.startsWith('erut:')) return ir('erut',{id:a.slice(5)});
+  if(a.startsWith('erut:')) return ACC.erut({id:a.slice(5)});
   if(a==='go:lista'){ return ir('rut'); }
   if(a.startsWith('go:')) return ir(a.slice(3));
-  if(a==='pick' && !d.t) return ir('pick',{t:V.ret.t,id:V.ret.id,q:''});
+  if(a==='pick' && !d.t) return V.ret.t==='sq' ? ir('seq') : ir('pick',{t:V.ret.t,id:V.ret.id,q:''});
   (ACC[a]||function(){})(d);
 }
 document.getElementById('app').addEventListener('click', e=>{
@@ -572,10 +616,7 @@ document.getElementById('app').addEventListener('input', e=>{
   const k = e.target.dataset.in; if(!k) return; const v = e.target.value;
   if(k==='modname'){ porId(S.modulos,e.target.dataset.id).nombre=v; guardar(); }
   else if(k==='rutname'){ porId(S.rutinas,e.target.dataset.id).nombre=v; guardar(); }
-  else if(k==='rtab'){ const r=porId(S.rutinas,e.target.dataset.id); if(v) r.tablero=v; else delete r.tablero; guardar(); }
-  else if(k==='fname'){ porId(S.fichas,e.target.dataset.id).nombre=v; guardar(); }
-  else if(k==='fprem'){ porId(S.fichas,e.target.dataset.id).premio=v; guardar(); }
-  else if(k==='wfic'){ const it=S.semana[+e.target.dataset.d].find(x=>x.id===e.target.dataset.id); if(it){ if(v) it.tablero=v; else delete it.tablero; guardar(); } }
+  else if(k==='pnom'){ porId(S.cartera.premios,e.target.dataset.id).nombre=v; guardar(); }
   else if(k==='whora'){ const it=S.semana[+e.target.dataset.d].find(x=>x.id===e.target.dataset.id); if(it){ it.hora=v; guardar(); } }
   else if(k==='sqn'){ SQ.nombre=v; }
   else if(k==='whora2'){ W.hora=v; }

@@ -20,6 +20,7 @@ const CATEGORIAS = {
   escuela: {n:'Escuela', e:'🏫', c:'#bae6fd'},
   juegos: {n:'Juegos', e:'🧩', c:'#d9f99d'},
   rutina: {n:'Rutina diaria', e:'🕗', c:'#a7f3d0'},
+  pasos: {n:'Paso a paso', e:'🧼', c:'#cffafe'},
   propias: {n:'Mis tarjetas', e:'⭐', c:'#ede9fe'}
 };
 const TARJETAS_BASE = [
@@ -88,5 +89,6 @@ const TARJETAS_BASE = [
  ['cartas','🃏','cartas','juegos'],['videojuego','🕹️','videojuego','juegos'],['globos','🎈','globos','juegos'],['tren','🚂','tren','juegos'],['plastilina','🟠','plastilina','juegos'],
  ['despertarme','⏰','despertarme','rutina'],['desayunar','☕','desayunar','rutina'],['almorzar','🍝','almorzar','rutina'],['merendar','🥪','merendar','rutina'],['cenar','🍽️','cenar','rutina'],
  ['ordenar','🧹','ordenar','rutina'],['terapia','🧑‍⚕️','terapia','rutina'],['ir-escuela','🚌','ir a la escuela','rutina'],['volver-casa','🏡','volver a casa','rutina'],
- ['siesta','😴','siesta','rutina'],['pantalla','📱','pantalla','rutina'],['paseo','🌳','paseo','rutina'],['visita','👪','visitas','rutina'],['ducha','🚿','ducharme','rutina'],['pastillas','💊','medicación','rutina']
+ ['siesta','😴','siesta','rutina'],['pantalla','📱','pantalla','rutina'],['paseo','🌳','paseo','rutina'],['visita','👪','visitas','rutina'],['ducha','🚿','ducharme','rutina'],['pastillas','💊','medicación','rutina'],
+ ['ir-bano','🚽','ir al baño','pasos'],['agarrar-pasta','🧴','agarrar la pasta','pasos'],['abrir-pasta','🔓','abrir la pasta','pasos'],['agarrar-cepillo','🪥','agarrar el cepillo','pasos'],['poner-pasta','🧴','poner pasta en el cepillo','pasos'],['cepillar-1min','⏱️','cepillarme 1 minuto','pasos'],['abrir-canilla','🚰','abrir la canilla','pasos'],['enjuagar-boca','💦','enjuagarme la boca','pasos'],['lavar-cepillo','🚿','lavar el cepillo','pasos'],['guardar-cepillo','📥','guardar el cepillo','pasos'],['tapar-pasta','🔒','tapar la pasta','pasos'],['guardar-pasta','📥','guardar la pasta','pasos'],['lavar-boca','💦','lavarme la boca','pasos'],['cerrar-canilla','🚰','cerrar la canilla','pasos'],['secar-boca','🧻','secarme la boca','pasos'],['mojar-manos','💧','mojarme las manos','pasos'],['jabon','🧼','ponerme jabón','pasos'],['frotar','👏','frotar las manos','pasos'],['enjuagar-manos','💦','enjuagarme las manos','pasos'],['secar-manos','🧻','secarme las manos','pasos'],['bajar-pantalon','👖','bajarme el pantalón','pasos'],['sentarme-inodoro','🚽','sentarme en el inodoro','pasos'],['hacer-pipi','💛','hacer pipi o caca','pasos'],['limpiarme','🧻','limpiarme','pasos'],['subir-pantalon','👖','subirme el pantalón','pasos'],['tirar-cadena','🚽','tirar la cadena','pasos'],['sacar-pijama','👚','sacarme el pijama','pasos'],['poner-remera','👕','ponerme la remera','pasos'],['poner-pantalon','👖','ponerme el pantalón','pasos'],['poner-medias','🧦','ponerme las medias','pasos'],['poner-zapatillas','👟','ponerme las zapatillas','pasos'],['sacar-ropa','👕','sacarme la ropa','pasos'],['mojarme','🚿','mojarme','pasos'],['shampoo','🧴','ponerme shampoo','pasos'],['enjuagarme','💦','enjuagarme','pasos'],['secarme','🧺','secarme con la toalla','pasos']
 ];
