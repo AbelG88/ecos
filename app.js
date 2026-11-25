@@ -4,6 +4,10 @@ const BASE = {};
 TARJETAS_BASE.forEach(t => { BASE[t[0]] = {id:t[0], emoji:t[1], etiqueta:t[2], cat:t[3]}; });
 const EMOJIS_MOD = ['⭐','🏠','🍽️','😊','🎮','🚌','🏫','🛁','🧩','🎵','🐶','❤️','🌈','📚','⚽','🧸'];
 
+function paso(p){ return Array.isArray(p) ? p : [p]; }
+function pasoTexto(p){ return paso(p).map(id=>{ const t=tarjeta(id); return t?t.etiqueta:''; }).join(' ').replace(/\s+/g,' ').trim(); }
+function normPasos(a){ return (a||[]).map(p=>paso(p).filter(i=>tarjeta(i))).filter(p=>p.length); }
+const OLD2NEW = {'ir-bano':['ir','al','baño'],'agarrar-pasta':['agarrar','pasta-dental'],'abrir-pasta':['abrir','pasta-dental'],'agarrar-cepillo':['agarrar','cepillo'],'poner-pasta':['poner','pasta-dental','en','cepillo'],'cepillar-1min':['cepillar','un-minuto'],'abrir-canilla':['abrir','canilla'],'enjuagar-boca':['enjuagar','boca'],'lavar-cepillo':['lavar','cepillo'],'guardar-cepillo':['guardar','cepillo'],'tapar-pasta':['tapar','pasta-dental'],'guardar-pasta':['guardar','pasta-dental'],'lavar-boca':['lavar','boca'],'cerrar-canilla':['cerrar','canilla'],'secar-boca':['secar','boca'],'mojar-manos':['mojar','manos'],'jabon':['poner','jabon'],'frotar':['frotar','manos'],'enjuagar-manos':['enjuagar','manos'],'secar-manos':['secar','manos'],'bajar-pantalon':['bajar','pantalon'],'sentarme-inodoro':['sentarme','en','inodoro'],'hacer-pipi':['hacer','pipi','o','caca'],'subir-pantalon':['subir','pantalon'],'tirar-cadena':['tirar','cadena'],'sacar-pijama':['sacarme','pijama'],'poner-remera':['ponerme','remera'],'poner-pantalon':['ponerme','pantalon'],'poner-medias':['ponerme','medias'],'poner-zapatillas':['ponerme','zapatillas'],'sacar-ropa':['sacarme','ropa'],'shampoo':['poner','shampoo']};
 function uid(p){ return (p||'c_') + Math.random().toString(36).slice(2,9) + Date.now().toString(36).slice(-3); }
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
@@ -13,10 +17,10 @@ function modsNuevos(){
   return {
     ini:[
       m('m_verbos','Verbos','🗣️',['quiero','no-quiero','necesito','siento','dame','tengo','puedo','vamos','me-gusta','no-me-gusta','hacer','ver','pedir','poner','sacar','abrir','cerrar','tocar','venir','sentarme','levantarme','prestame','mostrame','llevame','ir','comer','beber','jugar','dormir','mirar','escuchar','ayudar','esperar','terminar','parar']),
-      m('m_conectores','Conectores','🔗',['el','la','los','las','un','una','mi','tu','y','o','con','sin','para','en','de','a','que','porque','pero','tambien','muy','mas','menos','poco','mucho','aca','ahi','si','no']),
+      m('m_conectores','Conectores','🔗',['el','la','los','las','un','una','mi','tu','y','o','con','sin','para','en','de','al','del','a','que','porque','pero','tambien','muy','mas','menos','poco','mucho','aca','ahi','si','no']),
       m('m_preguntas','Preguntas','❓',cat('preguntas')),
       m('m_diario','Rutina diaria','🕗',['despertarme','baño','lavar','vestir','desayunar','cepillar','mochila','ir-escuela','escuela','tarea','almorzar','merendar','jugar','bañarse','ducha','cenar','pijama','dormir','siesta','terapia','pastillas','paseo','pantalla','ordenar','visita','volver-casa','comer','beber','salir']),
-      m('m_pasos','Paso a paso','🧼',cat('pasos'))
+      m('m_pasos','Paso a paso','🧼',[...new Set(['ir','al','del','baño','abrir','cerrar','poner','lavar','hacer','sentarme','cepillar','cepillo','manos','boca','pantalon','remera','medias','zapatillas','pijama','en','con','el','la','o',...cat('pasos')])])
     ],
     fin:[
       m('m_personas','Personas','👪',cat('personas')), m('m_lugares','Lugares','🏠',cat('lugares')),
@@ -37,7 +41,7 @@ function fichaEj_viejo(){ return {id:'f_'+Math.random().toString(36).slice(2,7),
 function defaults(){
   const m = (id,nombre,emoji,items)=>({id,nombre,emoji,items});
   return {
-    v:1, activo:'m_verbos', mods3:true, mods4:true, mods5:true, mods6:true,
+    v:1, activo:'m_verbos', mods3:true, mods4:true, mods5:true, mods6:true, mods7:true,
     modulos:[...modsNuevos().ini,
       m('m_necesito','Necesito','🙋',['agua','baño','ayuda','hambre','sed','sueño','dolor','frio','calor','descanso','silencio','pañal']),
       m('m_emociones','Cómo estoy','😊',['feliz','triste','enojado','miedo','cansado','nervioso','tranquilo','aburrido','te-quiero']),
@@ -46,8 +50,8 @@ function defaults(){
       ...modsNuevos().fin, ...modsNuevos().fin2
     ],
     rutinas:[
-      {id:'r_manana',nombre:'Mañana',emoji:'🌅',pasos:['dormir','baño','lavar','vestir','comer','cepillar','mochila']},
-      {id:'r_noche',nombre:'Antes de dormir',emoji:'🌙',pasos:['comer','bañarse','cepillar','baño','dormir']}
+      {id:'r_manana',nombre:'Mañana',emoji:'🌅',pasos:[['despertarme'],['ir','al','baño'],['lavar','manos'],['ponerme','ropa'],['desayunar'],['cepillar'],['mochila']]},
+      {id:'r_noche',nombre:'Antes de dormir',emoji:'🌙',pasos:[['cenar'],['bañarse'],['cepillar'],['ir','al','baño'],['ponerme','pijama'],['dormir']]}
     ],
     tarjetas:[], ajustes:{voz:true, tam:'m', sonido:true},
     semana:[[],[],[],[],[],[],[]], cartera:carteraEj(), hechos:{}
@@ -70,7 +74,9 @@ function migrar(s){
     s.semana.forEach(d=>d.forEach(it=>{ if(it.tablero){ it.fichas = 1; } delete it.tablero; }));
   }
   delete s.fichas;
-  s.rutinas.forEach(r=>{ if(r.fichas==null) r.fichas = 1; });
+  s.rutinas.forEach(r=>{ if(r.fichas==null) r.fichas = 1; r.pasos = (r.pasos||[]).map(p=>typeof p==='string' ? (OLD2NEW[p]||[p]) : p); });
+  if(!Array.isArray(s.favs)) s.favs = [];
+  if(!Array.isArray(s.hist)) s.hist = [];
   if(!s.hechos || typeof s.hechos!=='object') s.hechos = {};
   if(!s.rutinas) s.rutinas = [];
   if(!s.tarjetas) s.tarjetas = [];
@@ -93,17 +99,21 @@ function migrar(s){
     }
     s.mods6 = true;
   }
+  if(!s.mods7){
+    const mp = s.modulos.find(x=>x.id==='m_pasos'); if(mp) mp.items = modsNuevos().ini.find(x=>x.id==='m_pasos').items;
+    s.mods7 = true;
+  }
   if(!s.mods4){
     const ya4 = id=>s.modulos.some(m=>m.id===id);
     s.modulos = s.modulos.concat(modsNuevos().fin2.filter(m=>!ya4(m.id)));
     s.mods4 = true;
   }
-  if(!s.modulos.some(m=>m.id===s.activo)) s.activo = (s.modulos[0]||{}).id || '';
+  if(!s.modulos.some(m=>m.id===s.activo) && s.activo!=='_favs' && s.activo!=='_hist') s.activo = (s.modulos[0]||{}).id || '';
   return s;
 }
 function cargar(){
   try{ const s = JSON.parse(localStorage.getItem(KEY)||'null'); if(s && s.modulos) return migrar(s); }catch(e){}
-  return defaults();
+  return migrar(defaults());
 }
 let S = cargar();
 function guardar(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){ toast('No se pudo guardar: poco espacio. Probá con menos fotos.'); } }
@@ -137,6 +147,13 @@ function descargar(obj, nombre){
 }
 function slug(s){ return String(s||'x').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'x'; }
 
+function usar(id){ S.hist = [id].concat(S.hist.filter(x=>x!==id)).slice(0,30); guardar(); }
+function pestanas(mias){
+  const l = [{id:'_favs',nombre:'Favoritos',emoji:'⭐',items:S.favs,virtual:true},{id:'_hist',nombre:'Historial',emoji:'🕘',items:S.hist,virtual:true}].concat(S.modulos);
+  if(mias && S.tarjetas.length) l.push({id:'_mias',nombre:'Mis tarjetas',emoji:'✨',items:S.tarjetas.map(t=>t.id),virtual:true});
+  return l;
+}
+function favBtn(id){ return `<span class="fav" data-act="fav" data-id="${esc(id)}">${S.favs.includes(id)?'★':'☆'}</span>`; }
 /* ---- sonido (se genera en el dispositivo, sin archivos) ---- */
 let AC = null;
 const SON = {ficha:[[660,.14],[880,.24]], ok:[[784,.12],[988,.22]], premio:[[523,.13],[659,.13],[784,.13],[1047,.45],[784,.12],[1047,.6]]};
@@ -171,7 +188,7 @@ function marcar(id, on){
 }
 
 /* ---- estado de pantalla ---- */
-let V = {n:'home'}, edit = false, frase = [], playing = null, cele = null, subRut = 'sem', sheet = null, W = {ref:null,tipo:'c',hora:'',dias:[]}, SQ = {nombre:'',pasos:[],fichas:1,edit:null};
+let V = {n:'home'}, edit = false, frase = [], playing = null, cele = null, subRut = 'sem', sheet = null, W = {ref:null,tipo:'c',hora:'',dias:[]}, SQ = {nombre:'',pasos:[],cur:[],at:null,fichas:1,edit:null};
 function ir(n, p){ sheet = null; V = Object.assign({n}, p||{}); render(); window.scrollTo(0,0); }
 function porId(lista, id){ return lista.find(x=>x.id===id); }
 
@@ -182,16 +199,21 @@ function cab(titulo, izq, der){
 function backBtn(a){ return `<button data-act="${a||'home'}">‹</button>`; }
 
 function vHome(){
-  const act = S.activo;
-  const chips = S.modulos.map(m=>`<button class="chip ${act===m.id?'sel':''}" data-act="mod" data-id="${m.id}">${esc(m.emoji)} ${esc(m.nombre)}</button>`).join('')
+  const act = S.activo, tabs = pestanas(false);
+  const chips = tabs.map(m=>`<button class="chip ${act===m.id?'sel':''}" data-act="mod" data-id="${m.id}">${esc(m.emoji)} ${esc(m.nombre)}</button>`).join('')
     + (edit ? `<button class="chip add" data-act="newmod">➕ Módulo</button>` : '');
-  const tira = frase.length ? frase.map(miniHtml).join('') : '<span class="vacia">Tocá las tarjetas para armar una frase</span>';
+  const tira = frase.length ? frase.map(miniHtml).join('') : '<span class="vvacia">Tocá las tarjetas para armar una frase</span>'.replace('vvacia','vacia');
+  const m = tabs.find(x=>x.id===act) || tabs[2];
   let cuerpo = '';
-  const m = porId(S.modulos, act) || S.modulos[0];
-  if(!m){ cuerpo = '<div class="vacio">No hay módulos. Activá ✏️ y creá uno.</div>'; }
+  if(!m){ cuerpo = '<div class="vacio">No hay pestañas.</div>'; }
   else{
-    cuerpo = m.items.length ? `<div class="grid">${m.items.map(id=>cardHtml(id)).join('')}</div>` : '<div class="vacio">Este módulo está vacío. Activá ✏️ y agregá tarjetas.</div>';
-    if(edit) cuerpo += `<div class="page"><button class="btn" data-act="emod" data-id="${m.id}">✏️ Editar “${esc(m.nombre)}” (orden, tarjetas, nombre)</button></div>`;
+    const items = m.items.filter(id=>tarjeta(id));
+    if(items.length) cuerpo = `<div class="grid">${items.map(id=>cardHtml(id, edit?favBtn(id):'')).join('')}</div>`;
+    else if(m.id==='_favs') cuerpo = '<div class="vacio">Acá van tus tarjetas favoritas.<br>Activá ✏️, entrá a cualquier pestaña y tocá la ☆ de las que quieras tener a mano.</div>';
+    else if(m.id==='_hist') cuerpo = '<div class="vacio">Acá aparecen las últimas tarjetas que se usaron, la más reciente primero.</div>';
+    else cuerpo = '<div class="vacio">Este módulo está vacío. Activá ✏️ y agregá tarjetas.</div>';
+    if(edit && !m.virtual) cuerpo += `<div class="page"><button class="btn" data-act="emod" data-id="${m.id}">✏️ Editar “${esc(m.nombre)}” (orden, tarjetas, nombre)</button></div>`;
+    if(edit && m.id==='_hist' && items.length) cuerpo += `<div class="page"><button class="btn del" data-act="clrhist">🗑️ Borrar el historial</button></div>`;
   }
   return cab('💬 Ecos','',topBtns())
     + `<div class="frase"><div class="tira">${tira}</div><button class="fbtn" data-act="back1" aria-label="Borrar última">⌫</button><button class="fbtn say" data-act="speak" aria-label="Hablar">🔊</button></div>`
@@ -200,7 +222,7 @@ function vHome(){
 function topBtns(){ return `<button class="${edit?'on':''}" data-act="toggleEdit" aria-label="Editar">✏️</button><button data-act="aj" aria-label="Ajustes">⚙️</button>`; }
 function nav(){
   const n = V.n;
-  return `<nav class="nav3">${[['home','💬','Hablar'],['rut','🔁','Rutinas'],['fic','⭐','Fichas']].map(([k,e,t])=>`<button class="${n===k?'sel':''} ${k==='rut'?'big':''}" data-act="go" data-k="${k}"><span>${e}</span>${t}</button>`).join('')}</nav>`;
+  return `<nav class="nav3">${[['home','💬','Hablar'],['rut','🔁','Rutinas'],['fic','⭐','Fichas']].map(([k,e,t])=>`<button class="${n===k?'sel':''} " data-act="go" data-k="${k}"><span>${e}</span>${t}</button>`).join('')}</nav>`;
 }
 
 /* ---- Rutinas: semana + lista ---- */
@@ -249,18 +271,18 @@ function vRut(){
 
 /* ---- elegir tarjetas SIN buscador: siempre por pestañas ---- */
 function tabsPick(act){
-  const mods = S.modulos.concat(S.tarjetas.length ? [{id:'_mias',nombre:'Mis tarjetas',emoji:'⭐',items:S.tarjetas.map(t=>t.id)}] : []);
-  const tab = V.tab || (mods[0]||{}).id;
+  const mods = pestanas(true);
+  const tab = V.tab || (S.favs.length ? '_favs' : (S.modulos[0]||{}).id);
   const chips = mods.map(m=>`<button class="chip ${tab===m.id?'sel':''}" data-act="${act}" data-id="${m.id}">${esc(m.emoji)} ${esc(m.nombre)}</button>`).join('');
-  const m = mods.find(x=>x.id===tab) || mods[0];
-  return {tab, html:`<div class="chips">${chips}</div>`, items: m ? m.items : []};
+  const m = mods.find(x=>x.id===tab) || mods[2];
+  return {tab, html:`<div class="chips">${chips}</div>`, items: m ? m.items.filter(id=>tarjeta(id)) : []};
 }
 const PLANTILLAS = [
-  {n:'Lavarse los dientes',e:'🪥',p:['ir-bano','agarrar-pasta','abrir-pasta','agarrar-cepillo','poner-pasta','cepillar-1min','abrir-canilla','enjuagar-boca','lavar-cepillo','guardar-cepillo','tapar-pasta','guardar-pasta','lavar-boca','cerrar-canilla','secar-boca']},
-  {n:'Lavarse las manos',e:'🧼',p:['abrir-canilla','mojar-manos','jabon','frotar','enjuagar-manos','cerrar-canilla','secar-manos']},
-  {n:'Ir al baño',e:'🚽',p:['ir-bano','bajar-pantalon','sentarme-inodoro','hacer-pipi','limpiarme','subir-pantalon','tirar-cadena','abrir-canilla','jabon','frotar','enjuagar-manos','cerrar-canilla','secar-manos']},
-  {n:'Vestirse',e:'👕',p:['sacar-pijama','poner-remera','poner-pantalon','poner-medias','poner-zapatillas']},
-  {n:'Bañarse',e:'🛁',p:['sacar-ropa','abrir-canilla','mojarme','shampoo','jabon','enjuagarme','cerrar-canilla','secarme','poner-pantalon']}
+  {n:'Lavarse los dientes',e:'🪥',p:[['ir','al','baño'],['agarrar','pasta-dental'],['abrir','pasta-dental'],['agarrar','cepillo'],['poner','pasta-dental','en','cepillo'],['cepillar','un-minuto'],['abrir','canilla'],['enjuagar','boca'],['lavar','cepillo'],['guardar','cepillo'],['tapar','pasta-dental'],['guardar','pasta-dental'],['lavar','boca'],['cerrar','canilla'],['secar','boca']]},
+  {n:'Lavarse las manos',e:'🧼',p:[['abrir','canilla'],['mojar','manos'],['poner','jabon'],['frotar','manos'],['enjuagar','manos'],['cerrar','canilla'],['secar','manos']]},
+  {n:'Ir al baño',e:'🚽',p:[['ir','al','baño'],['bajar','pantalon'],['sentarme','en','inodoro'],['hacer','pipi','o','caca'],['limpiarme'],['subir','pantalon'],['tirar','cadena'],['abrir','canilla'],['poner','jabon'],['frotar','manos'],['enjuagar','manos'],['cerrar','canilla'],['secar','manos']]},
+  {n:'Vestirse',e:'👕',p:[['sacarme','pijama'],['ponerme','remera'],['ponerme','pantalon'],['ponerme','medias'],['ponerme','zapatillas']]},
+  {n:'Bañarse',e:'🛁',p:[['sacarme','ropa'],['abrir','canilla'],['mojarme'],['poner','shampoo'],['poner','jabon'],['enjuagarme'],['cerrar','canilla'],['secarme','con','toalla'],['ponerme','pantalon']]}
 ];
 function vAdd1(){
   const t = tabsPick('ptab');
@@ -292,20 +314,27 @@ function vAdd3(){
       <button class="btn pri gran" style="text-align:center" data-act="addsave">✅ Guardar</button></div>`;
 }
 /* rutina paso a paso (armada con tarjetas de las pestañas) */
+function stepHtml(p){
+  return paso(p).map(id=>{ const t=tarjeta(id); return t?`<span class="sc">${t.foto?`<img src="${t.foto}" alt="">`:esc(t.emoji)}<i>${esc(t.etiqueta)}</i></span>`:''; }).join('<em>+</em>');
+}
 function vSeq(){
   const t = tabsPick('ptab'), c = S.cartera;
-  const pasos = SQ.pasos.map((id,i)=>{ const k=tarjeta(id); return k?`<div class="sqr"><b>${i+1}</b><span class="se">${k.foto?`<img src="${k.foto}" alt="">`:esc(k.emoji)}</span><span class="st">${esc(k.etiqueta)}</span>
-    <button data-act="squp" data-i="${i}" ${i===0?'disabled':''}>▲</button><button data-act="sqdown" data-i="${i}" ${i===SQ.pasos.length-1?'disabled':''}>▼</button><button data-act="sqrm" data-i="${i}">✕</button></div>`:''; }).join('');
+  const pasos = SQ.pasos.map((p,i)=>`<div class="sqr"><b>${i+1}</b><div class="sqs2">${stepHtml(p)}</div>
+    <button data-act="sqedit" data-i="${i}" aria-label="Editar paso">✏️</button><button data-act="squp" data-i="${i}" ${i===0?'disabled':''}>▲</button><button data-act="sqdown" data-i="${i}" ${i===SQ.pasos.length-1?'disabled':''}>▼</button><button data-act="sqrm" data-i="${i}">✕</button></div>`).join('');
+  const cur = `<div class="box curbox"><h2>${SQ.at!=null?'Editando el paso '+(SQ.at+1):'Armando el paso '+(SQ.pasos.length+1)}</h2><p>Tocá las tarjetas de abajo en orden, como una frase. Ej.: <b>IR + AL + BAÑO</b>. Para sacar una, tocala acá.</p>
+    <div class="sqcur">${SQ.cur.length?SQ.cur.map((id,i)=>{ const k=tarjeta(id); return k?`<button class="sc" data-act="curx" data-i="${i}">${k.foto?`<img src="${k.foto}" alt="">`:esc(k.emoji)}<i>${esc(k.etiqueta)}</i></button>`:''; }).join('<em>+</em>'):'<span class="vacia">Todavía no elegiste tarjetas</span>'}</div>
+    ${SQ.cur.length?`<div class="fraseprev">“${esc(pasoTexto(SQ.cur))}”</div>`:''}
+    <button class="btn pri" style="text-align:center" data-act="sqstep" ${SQ.cur.length?'':'disabled'}>✅ Listo este paso</button></div>`;
   const edicion = SQ.edit ? `<div class="page"><div class="box"><button class="btn" data-act="exprut" data-id="${SQ.edit}">📤 Exportar esta rutina</button><button class="btn del" data-act="delrut" data-id="${SQ.edit}">🗑️ Eliminar esta rutina</button></div></div>` : '';
+  const total = SQ.pasos.length + (SQ.cur.length?1:0);
   return cab(SQ.edit?'Editar rutina':'Rutina paso a paso', backBtn(SQ.edit?'go:rut':'go:add1'))
     + `<div class="page"><div class="box"><h2>Nombre</h2><input type="text" maxlength="30" placeholder="Ej.: Lavarse los dientes" value="${esc(SQ.nombre)}" data-in="sqn"></div>
       <div class="box"><h2>${esc(c.ficha)} Fichas que gana al terminarla</h2><div class="dias7" style="grid-template-columns:repeat(4,1fr)">${[0,1,2,3].map(n=>`<button class="${SQ.fichas===n?'sel':''}" data-act="sqf" data-n="${n}">${n}</button>`).join('')}</div></div>
-      <div class="box"><h2>Pasos, en orden</h2><p>Tocá las tarjetas de abajo en el orden en que se hacen. Con ▲ ▼ los movés y con ✕ los sacás.</p>
-      <div class="sqlist">${pasos||'<span class="vacia">Todavía no hay pasos</span>'}</div></div></div>`
+      ${pasos?`<div class="box"><h2>Pasos armados</h2><div class="sqlist">${pasos}</div></div>`:''}${cur}</div>`
     + t.html
     + `<div class="grid">${t.items.map(id=>{ const k=tarjeta(id); return k?`<button class="card" style="--c:${color(k)}" data-act="sqadd" data-id="${esc(id)}">${imHtml(k)}<span class="lb">${esc(k.etiqueta)}</span></button>`:''; }).join('')}</div>
       <div class="page"><button class="btn" style="text-align:center" data-act="sqncard">➕ Crear una tarjeta propia (con foto)</button></div>${edicion}
-      <div class="foot"><button class="btn pri gran" style="text-align:center" data-act="sqdone">${SQ.edit?'Guardar cambios':'Listo'} · ${SQ.pasos.length} ${SQ.pasos.length===1?'paso':'pasos'} ›</button></div>`;
+      <div class="foot"><button class="btn pri gran" style="text-align:center" data-act="sqdone">${SQ.edit?'Guardar cambios':'Guardar rutina'} · ${total} ${total===1?'paso':'pasos'} ›</button></div>`;
 }
 function vSheet(){
   if(!sheet) return '';
@@ -460,11 +489,12 @@ function vAj(){
 }
 function vPlay(){
   const r = porId(S.rutinas, playing.id); if(!r) return '';
-  const id = r.pasos[playing.i], t = tarjeta(id); const fin = playing.i >= r.pasos.length-1;
+  const ids = paso(r.pasos[playing.i]).filter(i=>tarjeta(i)); const fin = playing.i >= r.pasos.length-1;
+  const tiles = ids.map((id,k)=>{ const t=tarjeta(id); return (k?'<span class="plus">+</span>':'')+`<div class="pc">${t.foto?`<img src="${t.foto}" alt="">`:`<div class="pe2">${esc(t.emoji)}</div>`}<div class="pl">${esc(t.etiqueta)}</div></div>`; }).join('');
   return `<div class="play"><button class="x" data-act="stopPlay">✕</button>
     <div class="pro">${esc(r.nombre)} · paso ${playing.i+1} de ${r.pasos.length}</div>
-    ${t?(t.foto?`<img src="${t.foto}" alt="">`:`<div class="big">${esc(t.emoji)}</div>`):''}
-    <div class="nm">${t?esc(t.etiqueta):''}</div>
+    <div class="pcards n${Math.min(ids.length,5)}">${tiles}</div>
+    <div class="nm">${esc(pasoTexto(r.pasos[playing.i]))}</div>
     <div class="nav"><button data-act="pprev" ${playing.i===0?'disabled':''}>‹ Antes</button><button data-act="pspeak">🔊</button><button class="go" data-act="pnext">${fin?'¡Listo! ✓':'Siguiente ›'}</button></div></div>`;
 }
 
@@ -485,7 +515,9 @@ const ACC = {
   toggleEdit(){ edit = !edit; render(); },
   aj(){ ir('aj'); },
   mod(d){ S.activo = d.id; guardar(); render(); },
-  tap(d){ frase.push(d.id); const t=tarjeta(d.id); hablar(t&&t.etiqueta); render(); },
+  tap(d){ frase.push(d.id); usar(d.id); const t=tarjeta(d.id); hablar(t&&t.etiqueta); render(); },
+  fav(d){ const i=S.favs.indexOf(d.id); if(i>=0) S.favs.splice(i,1); else S.favs.push(d.id); guardar(); const y=window.scrollY; render(); window.scrollTo(0,y); },
+  clrhist(){ if(!confirm('¿Borrar el historial?')) return; S.hist=[]; guardar(); render(); },
   back1(){ frase.pop(); render(); },
   speak(){ if(!frase.length){ toast('Primero tocá algunas tarjetas'); return; } hablar(frase.map(id=>{const t=tarjeta(id);return t?t.etiqueta:'';}).join(' ')); },
   newmod(){ const m={id:uid('m_'),nombre:'Nuevo módulo',emoji:'⭐',items:[]}; S.modulos.push(m); S.activo=m.id; guardar(); ir('emod',{id:m.id}); },
@@ -513,19 +545,19 @@ const ACC = {
     const t = {id:uid('c_'), etiqueta:c.etiqueta.trim(), emoji:(c.emoji||'⭐').trim()||'⭐', foto:c.foto||'', cat:c.cat};
     if(!t.foto) delete t.foto;
     S.tarjetas.push(t);
-    if(V.ret.t==='sq'){ SQ.pasos.push(t.id); guardar(); toast('Tarjeta creada y agregada'); ir('seq'); return; }
+    if(V.ret.t==='sq'){ SQ.cur.push(t.id); guardar(); toast('Tarjeta creada y agregada'); ir('seq'); return; }
     const l = lista(V.ret.t,V.ret.id); if(l) l.push(t.id);
     guardar(); toast('Tarjeta creada y agregada'); ir('pick',{t:V.ret.t,id:V.ret.id,q:''});
   },
   togvoz(){ S.ajustes.voz=!S.ajustes.voz; guardar(); render(); },
   tam(d){ S.ajustes.tam=d.k; guardar(); render(); },
-  play(d){ playing={id:d.id,i:0,w:d.w||null}; render(); const r=porId(S.rutinas,d.id); const t=tarjeta(r.pasos[0]); hablar(t&&t.etiqueta); },
+  play(d){ playing={id:d.id,i:0,w:d.w||null}; render(); const r=porId(S.rutinas,d.id); hablar(pasoTexto(r.pasos[0])); },
   stopPlay(){ playing=null; render(); },
   pprev(){ if(playing.i>0){ playing.i--; render(); ACC.pspeak(); } },
   pnext(){ const r=porId(S.rutinas,playing.id); if(playing.i>=r.pasos.length-1){ const w=playing.w; playing=null; if(w) marcar(w,true); const itw=w&&S.semana[hoyIdx()].find(x=>x.id===w); if(itw) completar(itw,true); else { const n=typeof r.fichas==='number'?r.fichas:1; if(n>0) dar(n,'Terminó: '+r.nombre); else celebrar('ok','¡Muy bien!','Terminamos: '+r.nombre,'🎉','¡Muy bien! Terminamos'); } } else { playing.i++; render(); ACC.pspeak(); } },
-  pspeak(){ const r=porId(S.rutinas,playing.id); const t=tarjeta(r.pasos[playing.i]); hablar(t&&t.etiqueta); },
+  pspeak(){ const r=porId(S.rutinas,playing.id); hablar(pasoTexto(r.pasos[playing.i])); },
   expmod(d){ const m=porId(S.modulos,d.id); descargar({tipo:'ecos_modulo_v1',modulo:{nombre:m.nombre,emoji:m.emoji,items:m.items},tarjetas:usadas(m.items)},`ecos-modulo-${slug(m.nombre)}.json`); },
-  exprut(d){ const r=porId(S.rutinas,d.id); descargar({tipo:'ecos_rutina_v1',rutina:{nombre:r.nombre,emoji:r.emoji,pasos:r.pasos},tarjetas:usadas(r.pasos)},`ecos-rutina-${slug(r.nombre)}.json`); },
+  exprut(d){ const r=porId(S.rutinas,d.id); descargar({tipo:'ecos_rutina_v1',rutina:{nombre:r.nombre,emoji:r.emoji,pasos:r.pasos},tarjetas:usadas([].concat(...r.pasos.map(paso)))},`ecos-rutina-${slug(r.nombre)}.json`); },
   expall(){ descargar({tipo:'ecos_respaldo_v1',generado:new Date().toISOString(),datos:S},`ecos-respaldo-${new Date().toISOString().slice(0,10)}.json`); },
   imp(){ document.getElementById('impIn').click(); },
   togson(){ S.ajustes.sonido = S.ajustes.sonido===false; guardar(); render(); if(S.ajustes.sonido) tono('ok'); },
@@ -552,7 +584,7 @@ const ACC = {
   addgo(){ const di=V.dia==null?hoyIdx():V.dia; W={ref:null,tipo:'c',hora:'',dias:[di],back:di}; ir('add1'); },
   rutback(){ ir('rut',{dia:W.back}); },
   ptab(d){ V.tab=d.id; const y=window.scrollY; render(); window.scrollTo(0,y); },
-  pickc(d){ W.tipo='c'; W.ref=d.id; const t=tarjeta(d.id); hablar(t&&t.etiqueta); ir('add2'); },
+  pickc(d){ usar(d.id); W.tipo='c'; W.ref=d.id; const t=tarjeta(d.id); hablar(t&&t.etiqueta); ir('add2'); },
   pickr(d){ W.tipo='r'; W.ref=d.id; ir('add2'); },
   hora(d){ W.hora=d.h; ir('add3'); },
   hora2(){ ir('add3'); },
@@ -564,20 +596,24 @@ const ACC = {
     guardar(); tono('ok'); toast('¡Listo! Agregado ✓');
     ir('rut',{dia: W.dias.includes(hoyIdx()) ? hoyIdx() : W.dias[0]});
   },
-  newseq(){ SQ={nombre:'',pasos:[],fichas:1,edit:null}; ir('seq'); },
-  tpl(d){ const t=PLANTILLAS[+d.i]; const r={id:uid('r_'),nombre:t.n,emoji:t.e,pasos:t.p.slice(),fichas:1}; S.rutinas.push(r); guardar(); W.tipo='r'; W.ref=r.id; W.hora=''; ir('add2'); },
-  erut(d){ const r=porId(S.rutinas,d.id); if(!r) return; SQ={nombre:r.nombre,pasos:r.pasos.slice(),fichas:typeof r.fichas==='number'?r.fichas:1,edit:r.id}; ir('seq'); },
+  newseq(){ SQ={nombre:'',pasos:[],cur:[],at:null,fichas:1,edit:null}; ir('seq'); },
+  tpl(d){ const t=PLANTILLAS[+d.i]; const r={id:uid('r_'),nombre:t.n,emoji:t.e,pasos:t.p.map(x=>x.slice()),fichas:1}; S.rutinas.push(r); guardar(); W.tipo='r'; W.ref=r.id; W.hora=''; ir('add2'); },
+  erut(d){ const r=porId(S.rutinas,d.id); if(!r) return; SQ={nombre:r.nombre,pasos:r.pasos.map(x=>paso(x).slice()),cur:[],at:null,fichas:typeof r.fichas==='number'?r.fichas:1,edit:r.id}; ir('seq'); },
   sqf(d){ SQ.fichas=+d.n; const y=window.scrollY; render(); window.scrollTo(0,y); },
   squp(d){ mover(SQ.pasos,+d.i,-1); const y=window.scrollY; render(); window.scrollTo(0,y); },
   sqdown(d){ mover(SQ.pasos,+d.i,1); const y=window.scrollY; render(); window.scrollTo(0,y); },
-  sqadd(d){ SQ.pasos.push(d.id); const t=tarjeta(d.id); hablar(t&&t.etiqueta); const y=window.scrollY; render(); window.scrollTo(0,y); },
+  sqadd(d){ SQ.cur.push(d.id); usar(d.id); const t=tarjeta(d.id); hablar(t&&t.etiqueta); const y=window.scrollY; render(); window.scrollTo(0,y); },
+  curx(d){ SQ.cur.splice(+d.i,1); const y=window.scrollY; render(); window.scrollTo(0,y); },
+  sqstep(){ if(!SQ.cur.length) return; if(SQ.at!=null) SQ.pasos.splice(SQ.at,0,SQ.cur); else SQ.pasos.push(SQ.cur); SQ.cur=[]; SQ.at=null; tono('ok'); const y=window.scrollY; render(); window.scrollTo(0,y); },
+  sqedit(d){ if(SQ.cur.length){ toast('Primero terminá el paso que estás armando'); return; } SQ.at=+d.i; SQ.cur=SQ.pasos.splice(+d.i,1)[0]; render(); },
   sqrm(d){ SQ.pasos.splice(+d.i,1); const y=window.scrollY; render(); window.scrollTo(0,y); },
   sqncard(){ ir('ncard',{ret:{t:'sq'}}); },
   sqdone(){
-    if(!SQ.pasos.length){ toast('Elegí al menos un paso'); return; }
-    const primero=tarjeta(SQ.pasos[0]); const nombre=(SQ.nombre||'').trim() || ((primero?primero.etiqueta:'Rutina')+(SQ.pasos.length>1?' y '+(SQ.pasos.length-1)+' más':''));
-    if(SQ.edit){ const r=porId(S.rutinas,SQ.edit); if(r){ r.nombre=nombre.slice(0,30); r.pasos=SQ.pasos.slice(); r.fichas=SQ.fichas; guardar(); toast('Rutina guardada ✓'); } ir('rut'); return; }
-    const r={id:uid('r_'),nombre:nombre.slice(0,30),emoji:'🔁',pasos:SQ.pasos.slice(),fichas:SQ.fichas}; S.rutinas.push(r); guardar();
+    if(SQ.cur.length){ if(SQ.at!=null) SQ.pasos.splice(SQ.at,0,SQ.cur); else SQ.pasos.push(SQ.cur); SQ.cur=[]; SQ.at=null; }
+    if(!SQ.pasos.length){ toast('Armá al menos un paso'); return; }
+    const nombre=(SQ.nombre||'').trim() || (pasoTexto(SQ.pasos[0])+(SQ.pasos.length>1?' y '+(SQ.pasos.length-1)+' más':''));
+    if(SQ.edit){ const r=porId(S.rutinas,SQ.edit); if(r){ r.nombre=nombre.slice(0,30); r.pasos=SQ.pasos.map(x=>x.slice()); r.fichas=SQ.fichas; guardar(); toast('Rutina guardada ✓'); } ir('rut'); return; }
+    const r={id:uid('r_'),nombre:nombre.slice(0,30),emoji:'🔁',pasos:SQ.pasos.map(x=>x.slice()),fichas:SQ.fichas}; S.rutinas.push(r); guardar();
     W.tipo='r'; W.ref=r.id; W.hora=''; ir('add2');
   },
   /* fichas */
@@ -655,7 +691,7 @@ function importar(txt){
       S.modulos.push(m); S.activo=m.id; guardar(); toast('Módulo importado'); ir('home');
     }else if(d.tipo==='ecos_rutina_v1'){
       mezclarTarjetas(d.tarjetas);
-      S.rutinas.push({id:uid('r_'),nombre:String(d.rutina.nombre||'Rutina').slice(0,30),emoji:String(d.rutina.emoji||'🔁').slice(0,4),pasos:(d.rutina.pasos||[]).filter(i=>tarjeta(i))});
+      S.rutinas.push({id:uid('r_'),nombre:String(d.rutina.nombre||'Rutina').slice(0,30),emoji:String(d.rutina.emoji||'🔁').slice(0,4),pasos:normPasos(d.rutina.pasos)});
       guardar(); toast('Rutina importada'); ir('rut');
     }else if(d.tipo==='ecos_respaldo_v1' && d.datos && d.datos.modulos){
       if(!confirm('Esto REEMPLAZA todo lo que hay en este dispositivo. ¿Seguir?')) return;

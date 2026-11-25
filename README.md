@@ -35,3 +35,8 @@ MIT
 - Más pestañas: Rutina diaria, Colores, Ropa, Animales, Cuerpo, Escuela y Juegos.
 - **Rutinas paso a paso** con tantos pasos como haga falta (ej.: lavarse los dientes en 15 pasos): vienen 5 rutinas listas para usar (dientes, manos, baño, vestirse, bañarse) y se pueden armar propias con las pestañas de tarjetas, reordenar y crear tarjetas propias con foto.
 - **Fichas acumulables**: cada rutina o actividad suma las fichas que el adulto defina; se juntan en una billetera y se **canjean por los premios que cargue el adulto** (chocolate, helado, tele por X minutos…), cada uno con su costo.
+
+## Novedades v7
+- **Pasos con varias tarjetas**: cada paso de una rutina se arma sumando tarjetas (IR + AL + BAÑO; ABRIR + PASTA DENTAL). Las rutinas prediseñadas ya vienen así. En pantalla se ven todas juntas y se lee la frase completa.
+- **Favoritos** (⭐, con ✏️ activo se marca con la estrella) e **Historial** (últimas usadas, la más reciente primero).
+- Botón Rutinas igual a los otros dos.
