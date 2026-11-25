@@ -13,6 +13,13 @@ const CATEGORIAS = {
   conectores: {n:'Conectores', e:'🔗', c:'#e9d5ff'},
   preguntas: {n:'Preguntas', e:'❓', c:'#fef08a'},
   social: {n:'Saludos y cortesía', e:'🙏', c:'#fbcfe8'},
+  colores: {n:'Colores', e:'🎨', c:'#fecaca'},
+  ropa: {n:'Ropa', e:'👖', c:'#c7d2fe'},
+  animales: {n:'Animales', e:'🐶', c:'#fed7aa'},
+  cuerpo: {n:'Cuerpo', e:'🖐️', c:'#fbcfe8'},
+  escuela: {n:'Escuela', e:'🏫', c:'#bae6fd'},
+  juegos: {n:'Juegos', e:'🧩', c:'#d9f99d'},
+  rutina: {n:'Rutina diaria', e:'🕗', c:'#a7f3d0'},
   propias: {n:'Mis tarjetas', e:'⭐', c:'#ede9fe'}
 };
 const TARJETAS_BASE = [
@@ -61,5 +68,25 @@ const TARJETAS_BASE = [
  ['q-porque','🤔','¿por qué?','preguntas'],['q-como','🛠️','¿cómo?','preguntas'],['q-cuanto','🔢','¿cuánto?','preguntas'],['q-cual','👆','¿cuál?','preguntas'],
  ['buen-dia','🌞','buen día','social'],['buenas-noches','🌛','buenas noches','social'],['de-nada','😊','de nada','social'],['perdon','🙇','perdón','social'],
  ['permiso','🚶','permiso','social'],['como-estas','🗨️','¿cómo estás?','social'],['bien','👌','bien','social'],['mal','😕','mal','social'],
- ['me-llamo','🏷️','me llamo','social'],['listo','✅','listo','social']
+ ['me-llamo','🏷️','me llamo','social'],['listo','✅','listo','social'],
+ ['rojo','🔴','rojo','colores'],['azul','🔵','azul','colores'],['verde','🟢','verde','colores'],['amarillo','🟡','amarillo','colores'],['naranja','🟠','naranja','colores'],
+ ['violeta','🟣','violeta','colores'],['rosa','💗','rosa','colores'],['negro','⚫','negro','colores'],['blanco','⚪','blanco','colores'],['marron','🟤','marrón','colores'],['gris','🌫️','gris','colores'],
+ ['pantalon','👖','pantalón','ropa'],['short','🩳','short','ropa'],['buzo','🧶','buzo','ropa'],['medias','🧦','medias','ropa'],['zapatos','👞','zapatos','ropa'],
+ ['gorro','🧢','gorro','ropa'],['bufanda','🧣','bufanda','ropa'],['guantes','🧤','guantes','ropa'],['pijama','👚','pijama','ropa'],['vestido','👗','vestido','ropa'],
+ ['anteojos','👓','anteojos','ropa'],['ropa-interior','🩲','ropa interior','ropa'],
+ ['perro','🐶','perro','animales'],['gato','🐱','gato','animales'],['caballo','🐴','caballo','animales'],['vaca','🐮','vaca','animales'],['cerdo','🐷','chancho','animales'],
+ ['oveja','🐑','oveja','animales'],['pollito','🐥','pollito','animales'],['pato','🦆','pato','animales'],['pez','🐟','pez','animales'],['pajaro','🐦','pájaro','animales'],
+ ['conejo','🐰','conejo','animales'],['tortuga','🐢','tortuga','animales'],['elefante','🐘','elefante','animales'],['leon','🦁','león','animales'],['mono','🐵','mono','animales'],
+ ['mariposa','🦋','mariposa','animales'],['abeja','🐝','abeja','animales'],['rana','🐸','rana','animales'],['oso','🐻','oso','animales'],['dinosaurio','🦕','dinosaurio','animales'],
+ ['cabeza','🙂','cabeza','cuerpo'],['ojos','👁️','ojos','cuerpo'],['nariz','👃','nariz','cuerpo'],['boca','👄','boca','cuerpo'],['orejas','👂','orejas','cuerpo'],
+ ['manos','🖐️','manos','cuerpo'],['pies','🦶','pies','cuerpo'],['dientes','🦷','dientes','cuerpo'],['pelo','💇','pelo','cuerpo'],['brazos','🙆','brazos','cuerpo'],
+ ['piernas','🦵','piernas','cuerpo'],['lengua','👅','lengua','cuerpo'],
+ ['cuaderno','📓','cuaderno','escuela'],['tijera','✂️','tijera','escuela'],['pegamento','🧴','pegamento','escuela'],['pintura','🎨','pintura','escuela'],['recreo','🤸','recreo','escuela'],
+ ['pizarron','⬛','pizarrón','escuela'],['hoja','📄','hoja','escuela'],['regla','📏','regla','escuela'],['tarea','📝','tarea','escuela'],['cumple','🎂','cumpleaños','escuela'],['timbre','🔔','timbre','escuela'],
+ ['bloques','🧱','bloques','juegos'],['rompecabezas','🧩','rompecabezas','juegos'],['autitos','🏎️','autitos','juegos'],['burbujas','🧼','burbujas','juegos'],['hamaca','🎠','hamaca','juegos'],
+ ['arena','🏖️','arena','juegos'],['saltar','🤾','saltar','juegos'],['correr','🏃','correr','juegos'],['bailar','💃','bailar','juegos'],['esconderse','🙈','esconderse','juegos'],
+ ['cartas','🃏','cartas','juegos'],['videojuego','🕹️','videojuego','juegos'],['globos','🎈','globos','juegos'],['tren','🚂','tren','juegos'],['plastilina','🟠','plastilina','juegos'],
+ ['despertarme','⏰','despertarme','rutina'],['desayunar','☕','desayunar','rutina'],['almorzar','🍝','almorzar','rutina'],['merendar','🥪','merendar','rutina'],['cenar','🍽️','cenar','rutina'],
+ ['ordenar','🧹','ordenar','rutina'],['terapia','🧑‍⚕️','terapia','rutina'],['ir-escuela','🚌','ir a la escuela','rutina'],['volver-casa','🏡','volver a casa','rutina'],
+ ['siesta','😴','siesta','rutina'],['pantalla','📱','pantalla','rutina'],['paseo','🌳','paseo','rutina'],['visita','👪','visitas','rutina'],['ducha','🚿','ducharme','rutina'],['pastillas','💊','medicación','rutina']
 ];

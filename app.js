@@ -12,14 +12,22 @@ function modsNuevos(){
   const cat=k=>TARJETAS_BASE.filter(t=>t[3]===k).map(t=>t[0]);
   return {
     ini:[
-      m('m_verbos','Verbos','🗣️',['quiero','no-quiero','necesito','siento','dame','tengo','puedo','vamos','me-gusta','no-me-gusta','hacer','ver','pedir','poner','sacar','abrir','cerrar','tocar','venir','sentarme','levantarme','prestame','mostrame','llevame','ir','comer','beber','jugar','dormir','mirar','escuchar','ayudar']),
+      m('m_verbos','Verbos','🗣️',['quiero','no-quiero','necesito','siento','dame','tengo','puedo','vamos','me-gusta','no-me-gusta','hacer','ver','pedir','poner','sacar','abrir','cerrar','tocar','venir','sentarme','levantarme','prestame','mostrame','llevame','ir','comer','beber','jugar','dormir','mirar','escuchar','ayudar','esperar','terminar','parar']),
       m('m_conectores','Conectores','🔗',['el','la','los','las','un','una','mi','tu','y','o','con','sin','para','en','de','a','que','porque','pero','tambien','muy','mas','menos','poco','mucho','aca','ahi','si','no']),
-      m('m_preguntas','Preguntas','❓',cat('preguntas'))
+      m('m_preguntas','Preguntas','❓',cat('preguntas')),
+      m('m_diario','Rutina diaria','🕗',['despertarme','baño','lavar','vestir','desayunar','cepillar','mochila','ir-escuela','escuela','tarea','almorzar','merendar','jugar','bañarse','ducha','cenar','pijama','dormir','siesta','terapia','pastillas','paseo','pantalla','ordenar','visita','volver-casa','comer','beber','salir'])
     ],
     fin:[
       m('m_personas','Personas','👪',cat('personas')), m('m_lugares','Lugares','🏠',cat('lugares')),
       m('m_objetos','Objetos','🧸',cat('objetos')), m('m_tiempo','Tiempo','⏰',cat('tiempo')),
       m('m_social','Saludos','🙏',cat('social'))
+    ],
+    fin2:[
+      m('m_colores','Colores','🎨',cat('colores')),
+      m('m_ropa','Ropa','👖',['remera','campera','zapatillas',...cat('ropa')]),
+      m('m_animales','Animales','🐶',cat('animales')), m('m_cuerpo','Cuerpo','🖐️',cat('cuerpo')),
+      m('m_escuela','Escuela','🏫',['escuela','maestra','amigo','mochila','libro','lápiz',...cat('escuela')]),
+      m('m_juegos','Juegos','🧩',['pelota','juguete','bici','tablet','tele',...cat('juegos')])
     ]
   };
 }
@@ -27,13 +35,13 @@ function fichaEj(){ return {id:'f_'+Math.random().toString(36).slice(2,7),nombre
 function defaults(){
   const m = (id,nombre,emoji,items)=>({id,nombre,emoji,items});
   return {
-    v:1, activo:'m_verbos', mods3:true,
+    v:1, activo:'m_verbos', mods3:true, mods4:true, mods5:true,
     modulos:[...modsNuevos().ini,
-      m('m_necesito','Necesito','🙋',['agua','baño','ayuda','hambre','sed','sueño','dolor','frio','calor','descanso','silencio']),
+      m('m_necesito','Necesito','🙋',['agua','baño','ayuda','hambre','sed','sueño','dolor','frio','calor','descanso','silencio','pañal']),
       m('m_emociones','Cómo estoy','😊',['feliz','triste','enojado','miedo','cansado','nervioso','tranquilo','aburrido','te-quiero']),
-      m('m_comida','Quiero comer','🍎',['manzana','banana','pan','leche','jugo','galletitas','fideos','arroz','pollo','huevo','queso','fruta']),
+      m('m_comida','Quiero comer','🍎',['manzana','banana','pan','leche','jugo','galletitas','fideos','arroz','pollo','huevo','queso','fruta','yogur','verdura','sopa','pizza','helado','sandwich','papas']),
       m('m_acciones','Quiero hacer','🎮',['jugar','mirar','escuchar','leer','dibujar','cantar','salir','abrazar']),
-      ...modsNuevos().fin
+      ...modsNuevos().fin, ...modsNuevos().fin2
     ],
     rutinas:[
       {id:'r_manana',nombre:'Mañana',emoji:'🌅',pasos:['dormir','baño','lavar','vestir','comer','cepillar','mochila']},
@@ -55,6 +63,18 @@ function migrar(s){
     const n = modsNuevos(), ya = id=>s.modulos.some(m=>m.id===id);
     s.modulos = n.ini.filter(m=>!ya(m.id)).concat(s.modulos, n.fin.filter(m=>!ya(m.id)));
     s.mods3 = true;
+  }
+  if(!s.mods5){
+    if(!s.modulos.some(m=>m.id==='m_diario')){
+      const d = modsNuevos().ini.find(m=>m.id==='m_diario'); const k = s.modulos.findIndex(m=>m.id==='m_preguntas');
+      s.modulos.splice(k>=0?k+1:0, 0, d);
+    }
+    s.mods5 = true;
+  }
+  if(!s.mods4){
+    const ya4 = id=>s.modulos.some(m=>m.id===id);
+    s.modulos = s.modulos.concat(modsNuevos().fin2.filter(m=>!ya4(m.id)));
+    s.mods4 = true;
   }
   if(!s.modulos.some(m=>m.id===s.activo)) s.activo = (s.modulos[0]||{}).id || '';
   return s;
@@ -129,8 +149,8 @@ function marcar(id, on){
 }
 
 /* ---- estado de pantalla ---- */
-let V = {n:'home'}, edit = false, frase = [], playing = null, cele = null, subRut = 'sem';
-function ir(n, p){ V = Object.assign({n}, p||{}); render(); window.scrollTo(0,0); }
+let V = {n:'home'}, edit = false, frase = [], playing = null, cele = null, subRut = 'sem', sheet = null, W = {ref:null,tipo:'c',hora:'',dias:[]}, SQ = {nombre:'',pasos:[]};
+function ir(n, p){ sheet = null; V = Object.assign({n}, p||{}); render(); window.scrollTo(0,0); }
 function porId(lista, id){ return lista.find(x=>x.id===id); }
 
 /* ---- vistas ---- */
@@ -166,56 +186,114 @@ function itemInfo(it){
   if(it.tipo==='r'){ const r=porId(S.rutinas,it.ref); return r?{e:r.emoji,t:r.nombre,sub:r.pasos.length+' pasos'}:null; }
   const t=tarjeta(it.ref); return t?{e:t.foto?`<img src="${t.foto}" alt="">`:esc(t.emoji),t:t.etiqueta,sub:''}:null;
 }
-function vRut(){
-  const seg = `<div class="seg"><button class="${subRut==='sem'?'sel':''}" data-act="sub" data-k="sem">📅 Mi semana</button><button class="${subRut==='lista'?'sel':''}" data-act="sub" data-k="lista">🔁 Mis rutinas</button></div>`;
-  return cab('🔁 Rutinas','',topBtns()) + seg + (subRut==='sem' ? vSemana() : vRutLista());
-}
-function vRutLista(){
-  return `<div class="page">${S.rutinas.map(r=>`<div class="box"><div class="row"><button class="btn pri" style="margin:0" data-act="play" data-id="${r.id}">${esc(r.emoji)} ${esc(r.nombre)} · ${r.pasos.length} pasos</button>${edit?`<button class="btn sm" style="margin:0;width:auto" data-act="erut" data-id="${r.id}">✏️</button>`:''}</div></div>`).join('')}
-    ${edit?`<button class="btn" data-act="newrut">➕ Nueva rutina</button>`:''}
-    ${!S.rutinas.length?'<div class="vacio">Todavía no hay rutinas. Activá ✏️ para crear una.</div>':''}</div>`;
-}
 function itf(it){ return it.tablero ? porId(S.fichas,it.tablero) : null; }
-function vSemana(){
-  const hoy = hoyIdx(), di = V.dia==null ? hoy : V.dia, esHoy = di===hoy;
-  const items = S.semana[di], hechos = hechosHoy();
-  const tabs = DIAS.map((n,i)=>`<button class="dtab ${i===di?'sel':''} ${i===hoy?'hoy':''}" data-act="dia" data-i="${i}">${n}</button>`).join('');
-  const validos = items.filter(it=>itemInfo(it));
-  const hechosN = esHoy ? validos.filter(it=>hechos.includes(it.id)).length : 0;
-  const prog = esHoy && validos.length ? `<div class="prog"><div style="width:${Math.round(hechosN*100/validos.length)}%"></div><span>${hechosN} de ${validos.length} hechos</span></div>` : '';
-  const lista = items.map((it,ix)=>{
-    const inf = itemInfo(it); if(!inf) return '';
-    const done = esHoy && hechos.includes(it.id);
-    return `<div class="wi ${done?'done':''}">
-      ${edit?`<input type="time" class="hora" value="${esc(it.hora||'')}" data-in="whora" data-id="${it.id}" data-d="${di}">`:`<div class="hora">${esc(it.hora||'')}</div>`}
-      <button class="wmain" data-act="wopen" data-id="${it.id}" data-d="${di}"><span class="e">${inf.e}</span><span class="t">${esc(inf.t)}${inf.sub?`<small>${inf.sub}${it.tipo==='r'?' · tocá para empezar':''}${itf(it)?' · da '+esc(itf(it).ficha):''}</small>`:(itf(it)?`<small>da ${esc(itf(it).ficha)}</small>`:'')}</span></button>
-      ${esHoy&&!edit?`<button class="wchk ${done?'on':''}" data-act="wchk" data-id="${it.id}" aria-label="Hecho">${done?'✓':''}</button>`:''}
-      ${edit&&S.fichas.length?`<select class="wfic" data-in="wfic" data-id="${it.id}" data-d="${di}"><option value="">Sin ficha</option>${S.fichas.map(f=>`<option value="${f.id}" ${it.tablero===f.id?'selected':''}>Da una ficha: ${esc(f.ficha)} ${esc(f.nombre)}</option>`).join('')}</select>`:''}
-      ${edit?`<button class="mv" data-act="wup" data-d="${di}" data-j="${ix}" ${ix===0?'disabled':''}>▲</button><button class="mv" data-act="wdown" data-d="${di}" data-j="${ix}" ${ix===items.length-1?'disabled':''}>▼</button><button class="mv" data-act="wrm" data-d="${di}" data-j="${ix}">✕</button>`:''}
-    </div>`;
-  }).join('');
-  const cp = V.cp || [];
-  const copiar = edit && items.length ? `<div class="box"><h2>Copiar este día</h2><p>Elegí a qué días copiar lo que armaste el ${DIAS_L[di].toLowerCase()} (reemplaza lo que haya).</p>
-    <div class="emojis">${DIAS.map((n,i)=>i===di?'':`<button class="${cp.includes(i)?'sel':''}" style="width:auto;padding:0 12px;font-size:1rem;font-weight:700" data-act="wcp" data-i="${i}">${n}</button>`).join('')}</div>
-    <button class="btn" data-act="wcopy" data-d="${di}" ${cp.length?'':'disabled'}>📋 Copiar a los días elegidos</button></div>` : '';
-  return `<div class="dtabs">${tabs}</div>
-    <div class="page"><div class="dtit">${DIAS_L[di]}${esHoy?' · hoy':''}</div>${prog}
-    ${lista || `<div class="vacio">${edit?'Todavía no hay nada en este día. Agregá rutinas o actividades.':'Este día está libre. Activá ✏️ para armar el día desde que arranca hasta que termina.'}</div>`}
-    ${edit?`<button class="btn pri" data-act="wadd" data-d="${di}">➕ Agregar al día</button>${items.length>1?`<button class="btn" data-act="wsort" data-d="${di}">🕒 Ordenar por hora</button>`:''}`:''}
-    ${copiar}</div>`;
+function ordenarDia(i){
+  const k = x=>x.hora||'99:99';
+  S.semana[i] = S.semana[i].map((x,j)=>[x,j]).sort((a,b)=>k(a[0])<k(b[0])?-1:k(a[0])>k(b[0])?1:a[1]-b[1]).map(x=>x[0]);
 }
-function vWPick(){
-  const q = (V.q||'').trim().toLowerCase();
-  const rut = S.rutinas.map(r=>`<button class="btn" data-act="waddr" data-id="${r.id}">${esc(r.emoji)} ${esc(r.nombre)} <small style="color:var(--muted)">· rutina</small></button>`).join('');
-  const ts = todasTarjetas().filter(t=>!q || t.etiqueta.toLowerCase().includes(q)).slice(0,60);
-  return cab('Agregar al '+DIAS_L[V.d].toLowerCase(), backBtn('goSem'))
-    + `<div class="page"><div class="box"><h2>Rutinas</h2>${rut||'<p>No hay rutinas todavía.</p>'}</div>
-      <div class="box"><h2>Actividades (tarjetas)</h2><p>Por ejemplo: merienda, plaza, baño, terapia.</p>
-      <input type="text" placeholder="Buscar tarjeta…" value="${esc(V.q||'')}" data-in="wq"></div></div>
-      <div class="grid">${ts.map(t=>`<button class="card" style="--c:${color(t)}" data-act="waddc" data-id="${esc(t.id)}">${imHtml(t)}<span class="lb">${esc(t.etiqueta)}</span></button>`).join('')}</div>
-      <div class="foot"><button class="btn pri" data-act="goSem">Listo</button></div>`;
+function fh(h){ return h ? h.replace(/^0/,'') : ''; }
+
+/* ---- Mi día: pantalla principal de Rutinas ---- */
+function vRut(){
+  const hoy = hoyIdx(), di = V.dia==null ? hoy : V.dia, esHoy = di===hoy;
+  const items = S.semana[di].filter(it=>itemInfo(it)), hechos = hechosHoy();
+  const sig = esHoy ? items.find(it=>!hechos.includes(it.id)) : null;
+  const hechosN = esHoy ? items.filter(it=>hechos.includes(it.id)).length : 0;
+  const tabs = DIAS.map((n,i)=>`<button class="dtab ${i===di?'sel':''} ${i===hoy?'hoy':''}" data-act="dia" data-i="${i}">${n}</button>`).join('');
+  const fecha = new Date();
+  const titulo = esHoy ? `Hoy · ${DIAS_L[di]} ${fecha.getDate()}` : DIAS_L[di];
+  const intro = S.ajustes.introRut===false ? '' : `<div class="intro"><b>Así de fácil:</b><ol><li>Tocá <b>➕ Agregar</b> y elegí qué hace en el día.</li><li>Cuando lo haga, <b>tocá la actividad</b>: se pone verde ✓.</li><li>¡Gana fichas y premios! ⭐</li></ol><button class="btn pri" data-act="introok" style="text-align:center">Entendido</button></div>`;
+  const prog = esHoy && items.length ? `<div class="prog"><div style="width:${Math.round(hechosN*100/items.length)}%"></div><span>${hechosN} de ${items.length} hechos</span></div>` : '';
+  const filas = items.map(it=>{
+    const inf = itemInfo(it), done = esHoy && hechos.includes(it.id), esSeq = it.tipo==='r', f = itf(it);
+    return `<div class="rw ${done?'done':''} ${sig&&sig.id===it.id?'next':''}">
+      <button class="rmain" data-act="ropen" data-id="${it.id}" data-d="${di}">
+        <span class="rhora">${esc(fh(it.hora))}</span><span class="re">${inf.e}</span>
+        <span class="rt">${esc(inf.t)}<small>${sig&&sig.id===it.id?'👉 Ahora':''}${esSeq?(sig&&sig.id===it.id?' · ':'')+inf.sub+' (paso a paso)':''}${f?(sig&&sig.id===it.id||esSeq?' · ':'')+'da '+esc(f.ficha):''}</small></span>
+        <span class="rchk ${done?'on':''}">${done?'✓':(esSeq&&esHoy?'▶':'')}</span></button>
+      <button class="rmore" data-act="rmore" data-id="${it.id}" data-d="${di}" aria-label="Opciones">⋯</button></div>`;
+  }).join('');
+  const vacio = !items.length ? `<div class="vacio" style="padding:18px 10px">Este día está libre.<br>Tocá el botón de abajo para armarlo.</div>` : '';
+  return cab('🔁 Mi día','',`<button data-act="aj" aria-label="Ajustes">⚙️</button>`)
+    + `<div class="dtabs">${tabs}</div>
+    <div class="page"><div class="dtit">${titulo}</div>${intro}${prog}${filas}${vacio}
+      <button class="btn pri gran" style="text-align:center" data-act="addgo">➕ Agregar algo a ${esHoy?'hoy':'este día'}</button>
+      ${items.length?`<button class="btn" style="text-align:center" data-act="cpsheet" data-d="${di}">📋 Copiar este día a otros días</button>`:''}</div>`;
 }
 
+/* ---- elegir tarjetas SIN buscador: siempre por pestañas ---- */
+function tabsPick(act){
+  const tab = V.tab || (S.modulos[0]||{}).id;
+  const chips = S.modulos.map(m=>`<button class="chip ${tab===m.id?'sel':''}" data-act="${act}" data-id="${m.id}">${esc(m.emoji)} ${esc(m.nombre)}</button>`).join('');
+  const m = porId(S.modulos,tab) || S.modulos[0];
+  return {tab, html:`<div class="chips">${chips}</div>`, items: m ? m.items : []};
+}
+function vAdd1(){
+  const t = tabsPick('ptab');
+  const rut = S.rutinas.length ? `<div class="box"><h2>🔁 Rutinas paso a paso</h2>${S.rutinas.map(r=>`<button class="btn" data-act="pickr" data-id="${r.id}">${esc(r.emoji)} ${esc(r.nombre)} <small style="color:var(--muted)">· ${r.pasos.length} pasos</small></button>`).join('')}</div>` : '';
+  return cab('Paso 1 de 3', backBtn('rutback'))
+    + `<div class="page"><div class="paso">¿Qué va a hacer?</div><p class="ayuda">Elegí una tarjeta de las pestañas, como en Hablar.</p></div>`
+    + t.html
+    + `<div class="grid">${t.items.map(id=>{ const c=tarjeta(id); return c?`<button class="card" style="--c:${color(c)}" data-act="pickc" data-id="${esc(id)}">${imHtml(c)}<span class="lb">${esc(c.etiqueta)}</span></button>`:''; }).join('')}</div>`
+    + rut
+    + `<div class="page"><button class="btn" style="text-align:center" data-act="newseq">🔁 Armar una rutina paso a paso</button></div>`;
+}
+function selInfo(){ return itemInfo({tipo:W.tipo,ref:W.ref}) || {e:'',t:''}; }
+function vAdd2(){
+  const inf = selInfo();
+  const horas = ['06:00','07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00'];
+  return cab('Paso 2 de 3', backBtn('go:add1'))
+    + `<div class="page"><div class="sel1"><span>${inf.e}</span><b>${esc(inf.t)}</b></div><div class="paso">¿A qué hora?</div>
+      <div class="horas">${horas.map(h=>`<button class="${W.hora===h?'sel':''}" data-act="hora" data-h="${h}">${fh(h)}</button>`).join('')}</div>
+      <button class="btn" style="text-align:center" data-act="hora" data-h="">🕒 Sin hora</button>
+      <div class="box"><h2>Otra hora</h2><div class="row"><input type="time" value="${esc(W.hora||'')}" data-in="whora2"><button class="btn sm" style="margin:0;width:auto" data-act="hora2">Siguiente ›</button></div></div></div>`;
+}
+function vAdd3(){
+  const inf = selInfo(), d = W.dias;
+  const chips = DIAS.map((n,i)=>`<button class="${d.includes(i)?'sel':''}" data-act="wd" data-i="${i}">${n}</button>`).join('');
+  return cab('Paso 3 de 3', backBtn('go:add2'))
+    + `<div class="page"><div class="sel1"><span>${inf.e}</span><b>${esc(inf.t)}</b>${W.hora?`<i>${fh(W.hora)}</i>`:''}</div><div class="paso">¿Qué días?</div>
+      <div class="dias7">${chips}</div>
+      <div class="row"><button class="btn" style="text-align:center" data-act="dpre" data-k="todos">Todos los días</button><button class="btn" style="text-align:center" data-act="dpre" data-k="lav">Lunes a viernes</button></div>
+      <button class="btn pri gran" style="text-align:center" data-act="addsave">✅ Guardar</button></div>`;
+}
+/* rutina paso a paso (armada con tarjetas de las pestañas) */
+function vSeq(){
+  const t = tabsPick('ptab');
+  const pasos = SQ.pasos.map((id,i)=>{ const c=tarjeta(id); return c?`<button class="sqs" data-act="sqrm" data-i="${i}"><b>${i+1}</b> ${c.foto?'':esc(c.emoji)} ${esc(c.etiqueta)} <u>✕</u></button>`:''; }).join('');
+  return cab('Rutina paso a paso', backBtn('go:add1'))
+    + `<div class="page"><div class="box"><h2>Nombre (opcional)</h2><input type="text" maxlength="30" placeholder="Ej.: Ir a dormir" value="${esc(SQ.nombre)}" data-in="sqn"></div>
+      <div class="box"><h2>Pasos, en orden</h2><p>Tocá las tarjetas de abajo en el orden en que se hacen. Para sacar un paso, tocalo.</p>
+      <div class="sqlist">${pasos||'<span class="vacia">Todavía no hay pasos</span>'}</div></div></div>`
+    + t.html
+    + `<div class="grid">${t.items.map(id=>{ const c=tarjeta(id); return c?`<button class="card" style="--c:${color(c)}" data-act="sqadd" data-id="${esc(id)}">${imHtml(c)}<span class="lb">${esc(c.etiqueta)}</span></button>`:''; }).join('')}</div>
+      <div class="foot"><button class="btn pri gran" style="text-align:center" data-act="sqdone">Listo · ${SQ.pasos.length} ${SQ.pasos.length===1?'paso':'pasos'} ›</button></div>`;
+}
+function vSheet(){
+  if(!sheet) return '';
+  if(sheet.tipo==='copy'){
+    const di = sheet.d;
+    return `<div class="sbk" data-act="sheetx"></div><div class="sheet"><h2>📋 Copiar el ${DIAS_L[di].toLowerCase()} a…</h2><p>Se copia todo lo del día. Reemplaza lo que ya haya en los días elegidos.</p>
+      <div class="dias7">${DIAS.map((n,i)=>i===di?'':`<button class="${sheet.cp.includes(i)?'sel':''}" data-act="cpt" data-i="${i}">${n}</button>`).join('')}</div>
+      <button class="btn pri gran" style="text-align:center" data-act="cpgo">📋 Copiar</button><button class="btn" style="text-align:center" data-act="sheetx">Cancelar</button></div>`;
+  }
+  const it = S.semana[sheet.d].find(x=>x.id===sheet.id); const inf = it && itemInfo(it); if(!inf){ sheet=null; return ''; }
+  return `<div class="sbk" data-act="sheetx"></div><div class="sheet"><h2>${inf.e.startsWith('<')?'':inf.e} ${esc(inf.t)}</h2>
+    <label class="lbl">🕒 Hora</label><div class="row"><input type="time" value="${esc(it.hora||'')}" data-in="whora" data-id="${it.id}" data-d="${sheet.d}"><button class="btn sm" style="margin:0;width:auto" data-act="whora0">Sin hora</button></div>
+    ${S.fichas.length?`<label class="lbl">⭐ Ficha al hacerlo</label><select data-in="wfic" data-id="${it.id}" data-d="${sheet.d}"><option value="">Ninguna</option>${S.fichas.map(f=>`<option value="${f.id}" ${it.tablero===f.id?'selected':''}>${esc(f.ficha)} ${esc(f.nombre)}</option>`).join('')}</select>`:''}
+    ${it.tipo==='r'?`<button class="btn" data-act="erut" data-id="${it.ref}">✏️ Cambiar los pasos de la rutina</button>`:''}
+    <button class="btn del" data-act="wrm2" data-id="${it.id}" data-d="${sheet.d}">🗑️ Sacar de este día</button>
+    <button class="btn pri" style="text-align:center" data-act="sheetx">Listo</button></div>`;
+}
+
+function completar(it, esRut){
+  const inf = itemInfo(it) || {t:''}, f = itf(it);
+  if(f){ darFicha(f, 'Hizo: '+inf.t); return; }
+  const todos = S.semana[hoyIdx()].filter(x=>itemInfo(x));
+  if(todos.length && todos.every(x=>hechosHoy().includes(x.id))) celebrar('ok','¡Día completo!','Hizo todo lo de hoy','🌟','¡Día completo! Muy bien');
+  else if(esRut) celebrar('ok','¡Muy bien!','Terminamos: '+inf.t,'🎉','¡Muy bien! Terminamos');
+  else { tono('ok'); hablar('¡Muy bien!'); render(); }
+}
 /* ---- Fichas (economía de fichas) ---- */
 function vFic(){
   const tableros = S.fichas.map(f=>{
@@ -365,8 +443,8 @@ function vPlay(){
 function render(){
   const app = document.getElementById('app');
   document.documentElement.style.setProperty('--card-size', ({s:'86px',m:'104px',l:'132px'})[S.ajustes.tam] || '104px');
-  const vistas = {home:vHome, rut:vRut, fic:vFic, efic:vEFic, wpick:vWPick, emod:vEditMod, erut:vEditRut, pick:vPick, ncard:vNCard, aj:vAj};
-  app.innerHTML = (vistas[V.n]||vHome)() + (['home','rut','fic'].includes(V.n) && !playing ? nav() : '') + (playing ? vPlay() : '') + vCele();
+  const vistas = {home:vHome, rut:vRut, add1:vAdd1, add2:vAdd2, add3:vAdd3, seq:vSeq, fic:vFic, efic:vEFic, emod:vEditMod, erut:vEditRut, pick:vPick, ncard:vNCard, aj:vAj};
+  app.innerHTML = (vistas[V.n]||vHome)() + (['home','rut','fic'].includes(V.n) && !playing ? nav() : '') + (playing ? vPlay() : '') + vSheet() + vCele();
 }
 
 /* ---- acciones ---- */
@@ -385,9 +463,6 @@ const ACC = {
   newmod(){ const m={id:uid('m_'),nombre:'Nuevo módulo',emoji:'⭐',items:[]}; S.modulos.push(m); S.activo=m.id; guardar(); ir('emod',{id:m.id}); },
   newrut(){ const r={id:uid('r_'),nombre:'Nueva rutina',emoji:'🔁',pasos:[]}; S.rutinas.push(r); guardar(); ir('erut',{id:r.id}); },
   go(d){ ir(d.k); },
-  sub(d){ subRut=d.k; render(); },
-  goSem(){ subRut='sem'; ir('rut',{dia:V.d}); },
-  dia(d){ V.dia=+d.i; V.cp=[]; render(); },
   emod(d){ ir('emod',{id:d.id}); }, erut(d){ ir('erut',{id:d.id}); },
   modemoji(d){ porId(S.modulos,d.id).emoji=d.e; guardar(); render(); },
   rutemoji(d){ porId(S.rutinas,d.id).emoji=d.e; guardar(); render(); },
@@ -401,7 +476,7 @@ const ACC = {
     guardar(); const y=window.scrollY; render(); window.scrollTo(0,y);
   },
   delmod(d){ if(!confirm('¿Eliminar este módulo? Las tarjetas no se borran.')) return; S.modulos=S.modulos.filter(m=>m.id!==d.id); if(S.activo===d.id) S.activo=(S.modulos[0]||{id:''}).id; guardar(); ir('home'); },
-  delrut(d){ if(!confirm('¿Eliminar esta rutina?')) return; S.rutinas=S.rutinas.filter(r=>r.id!==d.id); S.semana=S.semana.map(dia=>dia.filter(it=>!(it.tipo==='r'&&it.ref===d.id))); guardar(); subRut='lista'; ir('rut'); },
+  delrut(d){ if(!confirm('¿Eliminar esta rutina?')) return; S.rutinas=S.rutinas.filter(r=>r.id!==d.id); S.semana=S.semana.map(dia=>dia.filter(it=>!(it.tipo==='r'&&it.ref===d.id))); guardar(); ir('rut'); },
   ncard(){ ir('ncard',{ret:{t:V.t,id:V.id}}); },
   foto(){ document.getElementById('fotoIn').click(); },
   nofoto(){ V.c.foto=''; render(); },
@@ -418,7 +493,7 @@ const ACC = {
   play(d){ playing={id:d.id,i:0,w:d.w||null}; render(); const r=porId(S.rutinas,d.id); const t=tarjeta(r.pasos[0]); hablar(t&&t.etiqueta); },
   stopPlay(){ playing=null; render(); },
   pprev(){ if(playing.i>0){ playing.i--; render(); ACC.pspeak(); } },
-  pnext(){ const r=porId(S.rutinas,playing.id); if(playing.i>=r.pasos.length-1){ const w=playing.w; playing=null; if(w) marcar(w,true); const itw=w&&S.semana[hoyIdx()].find(x=>x.id===w); const f=(itw&&itf(itw))||(r.tablero&&porId(S.fichas,r.tablero)); if(f) darFicha(f,'Terminó: '+r.nombre); else celebrar('ok','¡Muy bien!','Terminamos: '+r.nombre,'🎉','¡Muy bien! Terminamos'); } else { playing.i++; render(); ACC.pspeak(); } },
+  pnext(){ const r=porId(S.rutinas,playing.id); if(playing.i>=r.pasos.length-1){ const w=playing.w; playing=null; if(w) marcar(w,true); const itw=w&&S.semana[hoyIdx()].find(x=>x.id===w); const f=(itw&&itf(itw))||(r.tablero&&porId(S.fichas,r.tablero)); if(f) darFicha(f,'Terminó: '+r.nombre); else if(itw) completar(itw,true); else celebrar('ok','¡Muy bien!','Terminamos: '+r.nombre,'🎉','¡Muy bien! Terminamos'); } else { playing.i++; render(); ACC.pspeak(); } },
   pspeak(){ const r=porId(S.rutinas,playing.id); const t=tarjeta(r.pasos[playing.i]); hablar(t&&t.etiqueta); },
   expmod(d){ const m=porId(S.modulos,d.id); descargar({tipo:'ecos_modulo_v1',modulo:{nombre:m.nombre,emoji:m.emoji,items:m.items},tarjetas:usadas(m.items)},`ecos-modulo-${slug(m.nombre)}.json`); },
   exprut(d){ const r=porId(S.rutinas,d.id); descargar({tipo:'ecos_rutina_v1',rutina:{nombre:r.nombre,emoji:r.emoji,pasos:r.pasos},tarjetas:usadas(r.pasos)},`ecos-rutina-${slug(r.nombre)}.json`); },
@@ -426,22 +501,49 @@ const ACC = {
   imp(){ document.getElementById('impIn').click(); },
   togson(){ S.ajustes.sonido = S.ajustes.sonido===false; guardar(); render(); if(S.ajustes.sonido) tono('ok'); },
   celeok(){ cele=null; clearTimeout(celebrar._t); render(); },
-  /* semana */
-  wopen(d){
-    const it = S.semana[+d.d].find(x=>x.id===d.id); if(!it) return;
-    if(it.tipo==='r'){ const r=porId(S.rutinas,it.ref); if(!r||!r.pasos.length){ toast('Esa rutina no tiene pasos'); return; } ACC.play({id:r.id, w:(+d.d===hoyIdx()?it.id:null)}); }
-    else { const t=tarjeta(it.ref); hablar(t&&t.etiqueta); }
+  /* mi día */
+  dia(d){ V.dia=+d.i; render(); },
+  introok(){ S.ajustes.introRut=false; guardar(); render(); },
+  ropen(d){
+    const di=+d.d, it=S.semana[di].find(x=>x.id===d.id); if(!it) return; const inf=itemInfo(it); if(!inf) return;
+    if(di!==hoyIdx()){ hablar(inf.t); toast('Se tilda el mismo día 😊'); return; }
+    const done = hechosHoy().includes(it.id);
+    if(it.tipo==='r' && !done){ const r=porId(S.rutinas,it.ref); if(!r||!r.pasos.length){ toast('Esta rutina todavía no tiene pasos'); return; } ACC.play({id:r.id,w:it.id}); return; }
+    if(done){ marcar(it.id,false); render(); return; }
+    marcar(it.id,true); completar(it,false);
   },
-  wchk(d){ const on=!hechosHoy().includes(d.id); marcar(d.id,on); const it0=S.semana[hoyIdx()].find(x=>x.id===d.id), f0=on&&it0&&itf(it0); if(f0){ const i0=itemInfo(it0); darFicha(f0,'Hizo: '+(i0?i0.t:'')); return; } const todos=S.semana[hoyIdx()].filter(it=>itemInfo(it)); if(on && todos.length && todos.every(it=>hechosHoy().includes(it.id))) celebrar('ok','¡Día completo!','Hizo todo lo de hoy','🌟','¡Día completo! Muy bien'); else { if(on) tono('ok'); render(); } },
-  wup(d){ mover(S.semana[+d.d],+d.j,-1); guardar(); render(); },
-  wdown(d){ mover(S.semana[+d.d],+d.j,1); guardar(); render(); },
-  wrm(d){ S.semana[+d.d].splice(+d.j,1); guardar(); render(); },
-  wadd(d){ ir('wpick',{d:+d.d,q:''}); },
-  waddr(d){ S.semana[V.d].push({id:uid('w_'),tipo:'r',ref:d.id,hora:''}); guardar(); toast('Agregado ✓'); },
-  waddc(d){ S.semana[V.d].push({id:uid('w_'),tipo:'c',ref:d.id,hora:''}); guardar(); toast('Agregado ✓'); },
-  wsort(d){ const l=S.semana[+d.d]; const con=l.filter(x=>x.hora).sort((a,b)=>a.hora<b.hora?-1:a.hora>b.hora?1:0), sin=l.filter(x=>!x.hora); S.semana[+d.d]=con.concat(sin); guardar(); render(); },
-  wcp(d){ const c=V.cp||(V.cp=[]); const i=c.indexOf(+d.i); if(i>=0) c.splice(i,1); else c.push(+d.i); render(); },
-  wcopy(d){ const o=S.semana[+d.d]; (V.cp||[]).forEach(j=>{ S.semana[j]=o.map(it=>Object.assign({},it,{id:uid('w_')})); }); const n=(V.cp||[]).length; V.cp=[]; guardar(); toast('Copiado a '+n+(n===1?' día':' días')); render(); },
+  rmore(d){ sheet={tipo:'item',d:+d.d,id:d.id}; render(); },
+  cpsheet(d){ sheet={tipo:'copy',d:+d.d,cp:[]}; render(); },
+  cpt(d){ const c=sheet.cp, i=c.indexOf(+d.i); if(i>=0) c.splice(i,1); else c.push(+d.i); render(); },
+  cpgo(){ if(!sheet.cp.length){ toast('Elegí a qué días'); return; } const o=S.semana[sheet.d]; sheet.cp.forEach(j=>{ S.semana[j]=o.map(it=>Object.assign({},it,{id:uid('w_')})); }); const n=sheet.cp.length; sheet=null; guardar(); toast('Copiado a '+n+(n===1?' día':' días')+' ✓'); render(); },
+  sheetx(){ if(sheet&&sheet.tipo==='item') ordenarDia(sheet.d); sheet=null; guardar(); render(); },
+  whora0(){ const it=S.semana[sheet.d].find(x=>x.id===sheet.id); if(it){ it.hora=''; guardar(); render(); } },
+  wrm2(d){ if(!confirm('¿Sacar esto de este día?')) return; S.semana[+d.d]=S.semana[+d.d].filter(x=>x.id!==d.id); sheet=null; guardar(); render(); },
+  /* agregar en 3 pasos */
+  addgo(){ const di=V.dia==null?hoyIdx():V.dia; W={ref:null,tipo:'c',hora:'',dias:[di],back:di}; ir('add1'); },
+  rutback(){ ir('rut',{dia:W.back}); },
+  ptab(d){ V.tab=d.id; const y=window.scrollY; render(); window.scrollTo(0,y); },
+  pickc(d){ W.tipo='c'; W.ref=d.id; const t=tarjeta(d.id); hablar(t&&t.etiqueta); ir('add2'); },
+  pickr(d){ W.tipo='r'; W.ref=d.id; ir('add2'); },
+  hora(d){ W.hora=d.h; ir('add3'); },
+  hora2(){ ir('add3'); },
+  wd(d){ const i=W.dias.indexOf(+d.i); if(i>=0) W.dias.splice(i,1); else W.dias.push(+d.i); render(); },
+  dpre(d){ W.dias = d.k==='todos' ? [0,1,2,3,4,5,6] : [0,1,2,3,4]; render(); },
+  addsave(){
+    if(!W.dias.length){ toast('Elegí al menos un día'); return; }
+    W.dias.forEach(i=>{ S.semana[i].push({id:uid('w_'),tipo:W.tipo,ref:W.ref,hora:W.hora||''}); ordenarDia(i); });
+    guardar(); tono('ok'); toast('¡Listo! Agregado ✓');
+    ir('rut',{dia: W.dias.includes(hoyIdx()) ? hoyIdx() : W.dias[0]});
+  },
+  newseq(){ SQ={nombre:'',pasos:[]}; ir('seq'); },
+  sqadd(d){ SQ.pasos.push(d.id); const t=tarjeta(d.id); hablar(t&&t.etiqueta); const y=window.scrollY; render(); window.scrollTo(0,y); },
+  sqrm(d){ SQ.pasos.splice(+d.i,1); const y=window.scrollY; render(); window.scrollTo(0,y); },
+  sqdone(){
+    if(!SQ.pasos.length){ toast('Elegí al menos un paso'); return; }
+    const primero=tarjeta(SQ.pasos[0]); const nombre=(SQ.nombre||'').trim() || ((primero?primero.etiqueta:'Rutina')+(SQ.pasos.length>1?' y '+(SQ.pasos.length-1)+' más':''));
+    const r={id:uid('r_'),nombre:nombre.slice(0,30),emoji:'🔁',pasos:SQ.pasos.slice()}; S.rutinas.push(r); guardar();
+    W.tipo='r'; W.ref=r.id; W.hora=''; ir('add2');
+  },
   /* fichas */
   ficha(d){ const f=porId(S.fichas,d.id); if(f) darFicha(f); },
   canjear(d){ const f=porId(S.fichas,d.id); if(!f) return; f.ganadas=0; f.premios=(f.premios||0)+1; guardar(); tono('ok'); toast('¡A disfrutar el premio! '+f.premioEmoji); render(); },
@@ -457,7 +559,7 @@ const ACC = {
 function acc(a, d){
   if(a.startsWith('emod:')) return ir('emod',{id:a.slice(5)});
   if(a.startsWith('erut:')) return ir('erut',{id:a.slice(5)});
-  if(a==='go:lista'){ subRut='lista'; return ir('rut'); }
+  if(a==='go:lista'){ return ir('rut'); }
   if(a.startsWith('go:')) return ir(a.slice(3));
   if(a==='pick' && !d.t) return ir('pick',{t:V.ret.t,id:V.ret.id,q:''});
   (ACC[a]||function(){})(d);
@@ -475,6 +577,8 @@ document.getElementById('app').addEventListener('input', e=>{
   else if(k==='fprem'){ porId(S.fichas,e.target.dataset.id).premio=v; guardar(); }
   else if(k==='wfic'){ const it=S.semana[+e.target.dataset.d].find(x=>x.id===e.target.dataset.id); if(it){ if(v) it.tablero=v; else delete it.tablero; guardar(); } }
   else if(k==='whora'){ const it=S.semana[+e.target.dataset.d].find(x=>x.id===e.target.dataset.id); if(it){ it.hora=v; guardar(); } }
+  else if(k==='sqn'){ SQ.nombre=v; }
+  else if(k==='whora2'){ W.hora=v; }
   else if(k==='wq'){ V.q=v; const pos=e.target.selectionStart; render(); const i=document.querySelector('[data-in=wq]'); if(i){ i.focus(); i.setSelectionRange(pos,pos); } }
   else if(k==='q'){ V.q=v; const pos=e.target.selectionStart; render(); const i=document.querySelector('[data-in=q]'); if(i){ i.focus(); i.setSelectionRange(pos,pos); } }
   else if(k==='cl') V.c.etiqueta=v; else if(k==='ce') V.c.emoji=v; else if(k==='cc') V.c.cat=v;
@@ -511,7 +615,7 @@ function importar(txt){
     }else if(d.tipo==='ecos_rutina_v1'){
       mezclarTarjetas(d.tarjetas);
       S.rutinas.push({id:uid('r_'),nombre:String(d.rutina.nombre||'Rutina').slice(0,30),emoji:String(d.rutina.emoji||'🔁').slice(0,4),pasos:(d.rutina.pasos||[]).filter(i=>tarjeta(i))});
-      guardar(); toast('Rutina importada'); subRut='lista'; ir('rut');
+      guardar(); toast('Rutina importada'); ir('rut');
     }else if(d.tipo==='ecos_respaldo_v1' && d.datos && d.datos.modulos){
       if(!confirm('Esto REEMPLAZA todo lo que hay en este dispositivo. ¿Seguir?')) return;
       S = migrar(d.datos); guardar(); toast('Respaldo restaurado'); ir('home');

@@ -31,3 +31,5 @@ MIT
 - Los sonidos se generan en el dispositivo (sin archivos) y se pueden silenciar en Ajustes.
 - **Pestañas nuevas** para armar frases coherentes: Verbos (quiero, necesito, siento, dame…), Conectores (el, la, con, sin, y, pero…), Preguntas, Personas, Lugares, Objetos, Tiempo y Saludos. Se pueden editar, ordenar y crear más.
 - Cada ítem de la semana puede dar una ficha al tildarlo.
+- **Mi día** (Rutinas) rediseñado para ser lo más simple posible: abre siempre en el día de hoy, se tilda tocando la actividad, y para agregar se elige en 3 pasos (qué, a qué hora, qué días) usando las mismas pestañas de tarjetas, sin escribir ni buscar.
+- Más pestañas: Rutina diaria, Colores, Ropa, Animales, Cuerpo, Escuela y Juegos.
