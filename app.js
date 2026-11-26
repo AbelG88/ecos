@@ -129,6 +129,21 @@ function cardHtml(id, extra){
 function miniHtml(id){ const t=tarjeta(id); return t?`<div class="mini" style="--c:${color(t)}">${t.foto?`<img src="${t.foto}" alt="">`:`<span class="im">${esc(t.emoji)}</span>`}${esc(t.etiqueta)}</div>`:''; }
 
 /* ---- voz ---- */
+let curAudio=null;
+function hablarIds(ids){
+  ids=(ids||[]).filter(i=>tarjeta(i));
+  if(!ids.some(i=>tarjeta(i).audio)) return hablar(ids.map(i=>tarjeta(i).etiqueta).join(' '));
+  if(!S.ajustes.voz) return;
+  try{ speechSynthesis.cancel(); }catch(e){}
+  if(curAudio){ try{curAudio.pause();}catch(e){} }
+  let k=0; const sig=()=>{
+    if(k>=ids.length) return; const t=tarjeta(ids[k++]);
+    if(t.audio){ const a=curAudio=new Audio(t.audio); a.onended=sig; a.onerror=sig; a.play().catch(sig); }
+    else if(window.speechSynthesis){ try{ const u=new SpeechSynthesisUtterance(t.etiqueta); u.lang='es-AR'; u.rate=.9; u.onend=sig; u.onerror=sig; speechSynthesis.speak(u); }catch(e){ sig(); } }
+    else sig();
+  }; sig();
+}
+let rec=null;
 function hablar(texto){
   if(!S.ajustes.voz || !window.speechSynthesis || !texto) return;
   try{
@@ -466,6 +481,9 @@ function vNCard(){
       <input type="text" maxlength="4" value="${esc(c.emoji)}" data-in="ce" style="font-size:1.6rem;text-align:center">
       <button class="btn" data-act="foto">📷 Elegir o sacar una foto</button><input type="file" id="fotoIn" accept="image/*" style="display:none">
       ${c.foto?`<div style="text-align:center;margin-top:10px"><img src="${c.foto}" style="width:110px;height:110px;object-fit:cover;border-radius:18px" alt=""><br><button class="btn del" data-act="nofoto">Quitar foto</button></div>`:''}
+      <h2 style="margin-top:12px">Sonido / nombre</h2><p>Grabá la voz con el micrófono (hasta 6 segundos). Si no grabás, la app lo lee con voz automática.</p>
+      <button class="btn ${rec?'del':''}" data-act="mic">${rec?'⏹️ Parar la grabación':(c.audio?'🎙️ Grabar de nuevo':'🎙️ Grabar con el micrófono')}</button>
+      ${c.audio?`<div style="text-align:center;margin-top:8px"><button class="btn" data-act="oir">▶️ Escuchar</button><button class="btn del" data-act="noaudio">Quitar sonido</button></div>`:''}
       <h2 style="margin-top:12px">Categoría</h2><select data-in="cc">${cats.map(k=>`<option value="${k}" ${c.cat===k?'selected':''}>${CATEGORIAS[k].e} ${CATEGORIAS[k].n}</option>`).join('')}</select></div>
       <button class="btn pri" data-act="saveCard">Guardar tarjeta</button></div>`;
 }
@@ -515,11 +533,11 @@ const ACC = {
   toggleEdit(){ edit = !edit; render(); },
   aj(){ ir('aj'); },
   mod(d){ S.activo = d.id; guardar(); render(); },
-  tap(d){ frase.push(d.id); usar(d.id); const t=tarjeta(d.id); hablar(t&&t.etiqueta); render(); },
+  tap(d){ frase.push(d.id); usar(d.id); const t=tarjeta(d.id); hablarIds([d.id]); render(); },
   fav(d){ const i=S.favs.indexOf(d.id); if(i>=0) S.favs.splice(i,1); else S.favs.push(d.id); guardar(); const y=window.scrollY; render(); window.scrollTo(0,y); },
   clrhist(){ if(!confirm('¿Borrar el historial?')) return; S.hist=[]; guardar(); render(); },
   back1(){ frase.pop(); render(); },
-  speak(){ if(!frase.length){ toast('Primero tocá algunas tarjetas'); return; } hablar(frase.map(id=>{const t=tarjeta(id);return t?t.etiqueta:'';}).join(' ')); },
+  speak(){ if(!frase.length){ toast('Primero tocá algunas tarjetas'); return; } hablarIds(frase); },
   newmod(){ const m={id:uid('m_'),nombre:'Nuevo módulo',emoji:'⭐',items:[]}; S.modulos.push(m); S.activo=m.id; guardar(); ir('emod',{id:m.id}); },
   newrut(){ const r={id:uid('r_'),nombre:'Nueva rutina',emoji:'🔁',pasos:[]}; S.rutinas.push(r); guardar(); ir('erut',{id:r.id}); },
   go(d){ ir(d.k); },
@@ -540,10 +558,25 @@ const ACC = {
   ncard(){ ir('ncard',{ret:{t:V.t,id:V.id}}); },
   foto(){ document.getElementById('fotoIn').click(); },
   nofoto(){ V.c.foto=''; render(); },
+  oir(){ if(V.c.audio){ try{ new Audio(V.c.audio).play(); }catch(e){} } },
+  noaudio(){ delete V.c.audio; render(); },
+  async mic(){
+    if(rec){ rec.stop(); return; }
+    if(!navigator.mediaDevices||!window.MediaRecorder){ toast('Este navegador no permite grabar'); return; }
+    try{
+      const st = await navigator.mediaDevices.getUserMedia({audio:true}); const ch=[];
+      const r = new MediaRecorder(st); rec = r;
+      r.ondataavailable = e=>{ if(e.data.size) ch.push(e.data); };
+      r.onstop = ()=>{ st.getTracks().forEach(t=>t.stop()); clearTimeout(tm); rec=null;
+        const fr=new FileReader(); fr.onload=()=>{ V.c.audio=fr.result; render(); }; fr.readAsDataURL(new Blob(ch,{type:r.mimeType||'audio/webm'})); };
+      const tm=setTimeout(()=>{ if(rec) rec.stop(); },6000);
+      r.start(); render(); toast('Grabando… hablá ahora');
+    }catch(e){ rec=null; toast('No se pudo usar el micrófono (revisá el permiso)'); }
+  },
   saveCard(){
     const c = V.c; if(!c.etiqueta.trim()){ toast('Escribí qué dice la tarjeta'); return; }
     const t = {id:uid('c_'), etiqueta:c.etiqueta.trim(), emoji:(c.emoji||'⭐').trim()||'⭐', foto:c.foto||'', cat:c.cat};
-    if(!t.foto) delete t.foto;
+    if(!t.foto) delete t.foto; if(c.audio) t.audio=c.audio;
     S.tarjetas.push(t);
     if(V.ret.t==='sq'){ SQ.cur.push(t.id); guardar(); toast('Tarjeta creada y agregada'); ir('seq'); return; }
     const l = lista(V.ret.t,V.ret.id); if(l) l.push(t.id);
@@ -551,11 +584,11 @@ const ACC = {
   },
   togvoz(){ S.ajustes.voz=!S.ajustes.voz; guardar(); render(); },
   tam(d){ S.ajustes.tam=d.k; guardar(); render(); },
-  play(d){ playing={id:d.id,i:0,w:d.w||null}; render(); const r=porId(S.rutinas,d.id); hablar(pasoTexto(r.pasos[0])); },
+  play(d){ playing={id:d.id,i:0,w:d.w||null}; render(); const r=porId(S.rutinas,d.id); hablarIds(paso(r.pasos[0])); },
   stopPlay(){ playing=null; render(); },
   pprev(){ if(playing.i>0){ playing.i--; render(); ACC.pspeak(); } },
   pnext(){ const r=porId(S.rutinas,playing.id); if(playing.i>=r.pasos.length-1){ const w=playing.w; playing=null; if(w) marcar(w,true); const itw=w&&S.semana[hoyIdx()].find(x=>x.id===w); if(itw) completar(itw,true); else { const n=typeof r.fichas==='number'?r.fichas:1; if(n>0) dar(n,'Terminó: '+r.nombre); else celebrar('ok','¡Muy bien!','Terminamos: '+r.nombre,'🎉','¡Muy bien! Terminamos'); } } else { playing.i++; render(); ACC.pspeak(); } },
-  pspeak(){ const r=porId(S.rutinas,playing.id); hablar(pasoTexto(r.pasos[playing.i])); },
+  pspeak(){ const r=porId(S.rutinas,playing.id); hablarIds(paso(r.pasos[playing.i])); },
   expmod(d){ const m=porId(S.modulos,d.id); descargar({tipo:'ecos_modulo_v1',modulo:{nombre:m.nombre,emoji:m.emoji,items:m.items},tarjetas:usadas(m.items)},`ecos-modulo-${slug(m.nombre)}.json`); },
   exprut(d){ const r=porId(S.rutinas,d.id); descargar({tipo:'ecos_rutina_v1',rutina:{nombre:r.nombre,emoji:r.emoji,pasos:r.pasos},tarjetas:usadas([].concat(...r.pasos.map(paso)))},`ecos-rutina-${slug(r.nombre)}.json`); },
   expall(){ descargar({tipo:'ecos_respaldo_v1',generado:new Date().toISOString(),datos:S},`ecos-respaldo-${new Date().toISOString().slice(0,10)}.json`); },
@@ -584,7 +617,7 @@ const ACC = {
   addgo(){ const di=V.dia==null?hoyIdx():V.dia; W={ref:null,tipo:'c',hora:'',dias:[di],back:di}; ir('add1'); },
   rutback(){ ir('rut',{dia:W.back}); },
   ptab(d){ V.tab=d.id; const y=window.scrollY; render(); window.scrollTo(0,y); },
-  pickc(d){ usar(d.id); W.tipo='c'; W.ref=d.id; const t=tarjeta(d.id); hablar(t&&t.etiqueta); ir('add2'); },
+  pickc(d){ usar(d.id); W.tipo='c'; W.ref=d.id; hablarIds([d.id]); ir('add2'); },
   pickr(d){ W.tipo='r'; W.ref=d.id; ir('add2'); },
   hora(d){ W.hora=d.h; ir('add3'); },
   hora2(){ ir('add3'); },
@@ -602,7 +635,7 @@ const ACC = {
   sqf(d){ SQ.fichas=+d.n; const y=window.scrollY; render(); window.scrollTo(0,y); },
   squp(d){ mover(SQ.pasos,+d.i,-1); const y=window.scrollY; render(); window.scrollTo(0,y); },
   sqdown(d){ mover(SQ.pasos,+d.i,1); const y=window.scrollY; render(); window.scrollTo(0,y); },
-  sqadd(d){ SQ.cur.push(d.id); usar(d.id); const t=tarjeta(d.id); hablar(t&&t.etiqueta); const y=window.scrollY; render(); window.scrollTo(0,y); },
+  sqadd(d){ SQ.cur.push(d.id); usar(d.id); hablarIds([d.id]); const y=window.scrollY; render(); window.scrollTo(0,y); },
   curx(d){ SQ.cur.splice(+d.i,1); const y=window.scrollY; render(); window.scrollTo(0,y); },
   sqstep(){ if(!SQ.cur.length) return; if(SQ.at!=null) SQ.pasos.splice(SQ.at,0,SQ.cur); else SQ.pasos.push(SQ.cur); SQ.cur=[]; SQ.at=null; tono('ok'); const y=window.scrollY; render(); window.scrollTo(0,y); },
   sqedit(d){ if(SQ.cur.length){ toast('Primero terminá el paso que estás armando'); return; } SQ.at=+d.i; SQ.cur=SQ.pasos.splice(+d.i,1)[0]; render(); },
@@ -679,7 +712,7 @@ document.getElementById('app').addEventListener('change', e=>{
 function mezclarTarjetas(ts){
   (ts||[]).forEach(t=>{
     if(!t||!t.id||!t.etiqueta||BASE[t.id]) return;
-    if(!S.tarjetas.some(x=>x.id===t.id)) S.tarjetas.push({id:String(t.id),etiqueta:String(t.etiqueta).slice(0,40),emoji:String(t.emoji||'⭐').slice(0,4),foto:typeof t.foto==='string'&&t.foto.startsWith('data:image/')?t.foto:undefined,cat:CATEGORIAS[t.cat]?t.cat:'propias'});
+    if(!S.tarjetas.some(x=>x.id===t.id)) S.tarjetas.push({id:String(t.id),etiqueta:String(t.etiqueta).slice(0,40),emoji:String(t.emoji||'⭐').slice(0,4),foto:typeof t.foto==='string'&&t.foto.startsWith('data:image/')?t.foto:undefined,audio:typeof t.audio==='string'&&t.audio.startsWith('data:audio/')?t.audio:undefined,cat:CATEGORIAS[t.cat]?t.cat:'propias'});
   });
 }
 function importar(txt){

@@ -40,3 +40,4 @@ MIT
 - **Pasos con varias tarjetas**: cada paso de una rutina se arma sumando tarjetas (IR + AL + BAÑO; ABRIR + PASTA DENTAL). Las rutinas prediseñadas ya vienen así. En pantalla se ven todas juntas y se lee la frase completa.
 - **Favoritos** (⭐, con ✏️ activo se marca con la estrella) e **Historial** (últimas usadas, la más reciente primero).
 - Botón Rutinas igual a los otros dos.
+- **Voz propia**: al crear una tarjeta se puede grabar el nombre con el micrófono (6 s); suena al tocarla, en frases y en rutinas.
