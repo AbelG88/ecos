@@ -160,6 +160,29 @@ function descargar(obj, nombre){
   a.download = nombre; document.body.appendChild(a); a.click();
   setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1000);
 }
+function avisoRespaldo(compartido){
+  const o = document.createElement('div');
+  o.style.cssText = 'position:fixed;inset:0;z-index:200;background:rgba(30,41,59,.55);display:flex;align-items:center;justify-content:center;padding:18px;';
+  o.innerHTML = '<div style="background:#fff;border-radius:18px;padding:20px;max-width:420px;width:100%;max-height:90vh;overflow:auto;font-size:.95rem;line-height:1.45;color:#1e293b">' +
+    '<h2 style="margin:0 0 8px;font-size:1.15rem">' + (compartido ? '📤 Respaldo listo' : '📥 Respaldo descargado') + '</h2>' +
+    (compartido ? '<p>Elegí dónde guardarlo: <b>Drive, tu mail o WhatsApp (mandátelo a vos mismo)</b>.</p>'
+                : '<p>El archivo quedó en la carpeta <b>Descargas</b> de este celular. <b>Eso no alcanza</b>: si perdés o cambiás el celular, se pierde también.</p><p>Pasalo a <b>Drive</b>, mandátelo por <b>mail</b> o por <b>WhatsApp a vos mismo</b>.</p>') +
+    '<p style="background:#fef3c7;border-radius:12px;padding:10px"><b>Si cambiás de celular:</b> hacé un respaldo antes, abrí Ecos en el celular nuevo y usá <i>Importar</i> con ese archivo. Sin el archivo, tus tarjetas, rutinas y fichas no se pueden pasar.</p>' +
+    '<button id="avOk" style="width:100%;padding:12px;border:0;border-radius:12px;background:#3b82f6;color:#fff;font-weight:700;font-size:1rem;cursor:pointer">Entendido</button></div>';
+  document.body.appendChild(o);
+  o.querySelector('#avOk').addEventListener('click', ()=>o.remove());
+}
+async function entregarRespaldo(obj, nombre){
+  const txt = JSON.stringify(obj, null, 2);
+  try{
+    const f = new File([txt], nombre, {type:'application/json'});
+    if(navigator.canShare && navigator.canShare({files:[f]})){
+      await navigator.share({files:[f], title:nombre});
+      avisoRespaldo(true); return true;
+    }
+  }catch(e){ if(e && e.name === 'AbortError') return false; }
+  descargar(obj, nombre); avisoRespaldo(false); return true;
+}
 function slug(s){ return String(s||'x').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'x'; }
 
 function usar(id){ S.hist = [id].concat(S.hist.filter(x=>x!==id)).slice(0,30); guardar(); }
@@ -230,7 +253,9 @@ function vHome(){
     if(edit && !m.virtual) cuerpo += `<div class="page"><button class="btn" data-act="emod" data-id="${m.id}">✏️ Editar “${esc(m.nombre)}” (orden, tarjetas, nombre)</button></div>`;
     if(edit && m.id==='_hist' && items.length) cuerpo += `<div class="page"><button class="btn del" data-act="clrhist">🗑️ Borrar el historial</button></div>`;
   }
-  return cab('💬 Ecos','',topBtns())
+  const hayPropio = S.tarjetas.length || S.rutinas.length>2 || (S.cartera&&S.cartera.total>0) || Object.keys(S.hechos||{}).length;
+  const bkAviso = (hayPropio && Date.now()-(S.ajustes.bk||0) > 15*864e5) ? `<div class="bkaviso"><span>Tus datos están solo en este celular. Hacé un respaldo y guardalo fuera (Drive, mail o WhatsApp).</span><button data-act="expall">Respaldar</button><button data-act="bksnooze" aria-label="Ahora no">✕</button></div>` : '';
+  return cab('💬 Ecos','',topBtns()) + bkAviso
     + `<div class="frase"><div class="tira">${tira}</div><button class="fbtn" data-act="back1" aria-label="Borrar última">⌫</button><button class="fbtn say" data-act="speak" aria-label="Hablar">🔊</button></div>`
     + `<div class="chips">${chips}</div>` + cuerpo;
 }
@@ -498,7 +523,9 @@ function vAj(){
         <div class="row">${[['s','Chicas'],['m','Medianas'],['l','Grandes']].map(([k,n])=>`<button class="btn ${a.tam===k?'pri':''}" style="text-align:center" data-act="tam" data-k="${k}">${n}</button>`).join('')}</div></div>
       <div class="box"><h2>Importar y exportar</h2><p>Cada módulo y cada rutina se puede exportar desde su pantalla de edición (✏️) y compartir con otra familia o con un terapeuta.</p>
         <button class="btn" data-act="imp">📥 Importar módulo, rutina o respaldo</button><input type="file" id="impIn" accept="application/json,.json" style="display:none">
-        <button class="btn" data-act="expall">💾 Descargar respaldo de todo</button></div>
+        <button class="btn" data-act="expall">💾 Hacer respaldo de todo (enviar / guardar)</button>
+        <p>${S.ajustes.bk?'Último respaldo: '+new Date(S.ajustes.bk).toLocaleDateString('es-AR')+'.':'Todavía no hiciste ningún respaldo.'} Tus datos están solo en este celular.</p>
+        <p>📱 <b>¿Cambiás de celular?</b> Hacé un respaldo antes, guardalo en Drive o mandátelo por WhatsApp, y en el nuevo usá <i>Importar</i>.</p></div>
       <div class="box"><h2>Apoyar el proyecto</h2><p>Ecos es gratis y de código abierto. Si te sirvió, un aporte me ayuda a seguir. Es opcional.</p>
         <div class="row"><a class="btn" style="text-align:center" href="https://link.mercadopago.com.ar/abelg88" target="_blank" rel="noopener">Mercado Pago</a><a class="btn" style="text-align:center" href="https://cafecito.app/abelg88" target="_blank" rel="noopener">Cafecito</a></div>
         <div class="row"><a class="btn" style="text-align:center" href="https://paypal.me/AbelG88" target="_blank" rel="noopener">PayPal</a><a class="btn" style="text-align:center" href="https://buymeacoffee.com/abelg88" target="_blank" rel="noopener">Buy Me a Coffee</a></div></div>
@@ -591,7 +618,11 @@ const ACC = {
   pspeak(){ const r=porId(S.rutinas,playing.id); hablarIds(paso(r.pasos[playing.i])); },
   expmod(d){ const m=porId(S.modulos,d.id); descargar({tipo:'ecos_modulo_v1',modulo:{nombre:m.nombre,emoji:m.emoji,items:m.items},tarjetas:usadas(m.items)},`ecos-modulo-${slug(m.nombre)}.json`); },
   exprut(d){ const r=porId(S.rutinas,d.id); descargar({tipo:'ecos_rutina_v1',rutina:{nombre:r.nombre,emoji:r.emoji,pasos:r.pasos},tarjetas:usadas([].concat(...r.pasos.map(paso)))},`ecos-rutina-${slug(r.nombre)}.json`); },
-  expall(){ descargar({tipo:'ecos_respaldo_v1',generado:new Date().toISOString(),datos:S},`ecos-respaldo-${new Date().toISOString().slice(0,10)}.json`); },
+  async expall(){
+    const ok = await entregarRespaldo({tipo:'ecos_respaldo_v1',generado:new Date().toISOString(),datos:S},`ecos-respaldo-${new Date().toISOString().slice(0,10)}.json`);
+    if(ok){ S.ajustes.bk = Date.now(); guardar(); render(); }
+  },
+  bksnooze(){ S.ajustes.bk = Date.now() - 8*864e5; guardar(); render(); },
   imp(){ document.getElementById('impIn').click(); },
   togson(){ S.ajustes.sonido = S.ajustes.sonido===false; guardar(); render(); if(S.ajustes.sonido) tono('ok'); },
   celeok(){ cele=null; clearTimeout(celebrar._t); render(); },
