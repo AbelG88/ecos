@@ -712,7 +712,7 @@ document.getElementById('app').addEventListener('change', e=>{
 function mezclarTarjetas(ts){
   (ts||[]).forEach(t=>{
     if(!t||!t.id||!t.etiqueta||BASE[t.id]) return;
-    if(!S.tarjetas.some(x=>x.id===t.id)) S.tarjetas.push({id:String(t.id),etiqueta:String(t.etiqueta).slice(0,40),emoji:String(t.emoji||'⭐').slice(0,4),foto:typeof t.foto==='string'&&t.foto.startsWith('data:image/')?t.foto:undefined,audio:typeof t.audio==='string'&&t.audio.startsWith('data:audio/')?t.audio:undefined,cat:CATEGORIAS[t.cat]?t.cat:'propias'});
+    if(!S.tarjetas.some(x=>x.id===t.id)) S.tarjetas.push({id:String(t.id),etiqueta:String(t.etiqueta).slice(0,40),emoji:String(t.emoji||'⭐').slice(0,4),foto:/^data:image\/(jpeg|png|webp|gif);base64,[A-Za-z0-9+\/=]+$/.test(t.foto||'')?t.foto:undefined,audio:/^data:audio\/[a-z0-9.+-]+(;codecs=[a-z0-9.,]+)?;base64,[A-Za-z0-9+\/=]+$/i.test(t.audio||'')?t.audio:undefined,cat:CATEGORIAS[t.cat]?t.cat:'propias'});
   });
 }
 function importar(txt){
