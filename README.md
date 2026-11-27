@@ -23,7 +23,7 @@ Paquetes de imágenes propios, más tarjetas, voces grabadas, tableros por conte
 
 ## Licencia
 
-MIT
+[PolyForm Noncommercial 1.0.0](LICENSE): gratis para usar, copiar y modificar sin fines comerciales.
 
 ## Novedades
 - **Rutinas** ahora tiene su propia pestaña inferior, con **Mi semana** (armá cada día de lunes a domingo, con horarios, rutinas y actividades; tildá lo hecho; copiá un día a otros) y **Mis rutinas**.

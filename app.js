@@ -502,7 +502,7 @@ function vAj(){
       <div class="box"><h2>Apoyar el proyecto</h2><p>Ecos es gratis y de código abierto. Si te sirvió, un aporte me ayuda a seguir. Es opcional.</p>
         <div class="row"><a class="btn" style="text-align:center" href="https://link.mercadopago.com.ar/abelg88" target="_blank" rel="noopener">Mercado Pago</a><a class="btn" style="text-align:center" href="https://cafecito.app/abelg88" target="_blank" rel="noopener">Cafecito</a></div>
         <div class="row"><a class="btn" style="text-align:center" href="https://paypal.me/AbelG88" target="_blank" rel="noopener">PayPal</a><a class="btn" style="text-align:center" href="https://buymeacoffee.com/abelg88" target="_blank" rel="noopener">Buy Me a Coffee</a></div></div>
-      <div class="box"><h2>Acerca de</h2><p>Hecha por Abel con vibe coding, en constante evolución. Código abierto (MIT). Tus datos están solo en este celular: hacé respaldos seguido. Las imágenes son emojis del sistema; no usa pictogramas de terceros.</p>
+      <div class="box"><h2>Acerca de</h2><p>Hecha por Abel con vibe coding, en constante evolución. Código público, licencia PolyForm Noncommercial (gratis, sin uso comercial). Tus datos están solo en este celular: hacé respaldos seguido. Las imágenes son emojis del sistema; no usa pictogramas de terceros.</p>
         <a class="btn" href="https://orbita-tea.pages.dev" target="_blank" rel="noopener">Más apps en Órbita TEA</a></div></div>`;
 }
 function vPlay(){
